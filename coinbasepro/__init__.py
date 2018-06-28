@@ -1,0 +1,2 @@
+from coinbasepro.public_client import PublicClient
+from coinbasepro.auth_client import AuthenticatedClient

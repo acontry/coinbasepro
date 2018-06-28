@@ -1,0 +1,6 @@
+venv/
+.idea
+
+build/
+dist
+coinbasepro.egg-info/
