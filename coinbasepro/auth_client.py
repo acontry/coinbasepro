@@ -16,7 +16,6 @@ class AuthenticatedClient(PublicClient):
     Attributes:
         api_url (str): The api url for this client instance to use.
         auth (CoinbaseProAuth): Custom authentication handler for each request.
-        session (requests.Session): Persistent HTTP connection object.
     """
     def __init__(self, key, secret, passphrase,
                  api_url='https://api.pro.coinbase.com',
@@ -586,123 +585,6 @@ class AuthenticatedClient(PublicClient):
         params.update(kwargs)
 
         return self._send_paginated_message('/fills', params=params)
-
-    def get_fundings(self, status=None, **kwargs):
-        """Every order placed with a margin profile that draws funding
-        will create a funding record.
-
-        This method returns a generator which may make multiple HTTP requests
-        while iterating through it.
-
-        Args:
-            status (list/str): Limit funding records to these statuses.
-                ** Options: 'outstanding', 'settled', 'rejected'
-            kwargs (dict): Additional HTTP request parameters.
-
-        Returns:
-            list: Containing information on margin funding. Example::
-                [
-                    {
-                        "id": "b93d26cd-7193-4c8d-bfcc-446b2fe18f71",
-                        "order_id": "b93d26cd-7193-4c8d-bfcc-446b2fe18f71",
-                        "profile_id": "d881e5a6-58eb-47cd-b8e2-8d9f2e3ec6f6",
-                        "amount": "1057.6519956381537500",
-                        "status": "settled",
-                        "created_at": "2017-03-17T23:46:16.663397Z",
-                        "currency": "USD",
-                        "repaid_amount": "1057.6519956381537500",
-                        "default_amount": "0",
-                        "repaid_default": false
-                    },
-                    {
-                        ...
-                    }
-                ]
-
-        """
-        params = {}
-        if status is not None:
-            params['status'] = status
-        params.update(kwargs)
-        return self._send_paginated_message('/funding', params=params)
-
-    def repay_funding(self, amount, currency):
-        """Repay funding. Repays the older funding records first.
-
-        Args:
-            amount (int): Amount of currency to repay
-            currency (str): The currency, example USD
-
-        Returns:
-            Not specified by Coinbase Pro documentation.
-
-        """
-        params = {
-            'amount': amount,
-            'currency': currency  # example: USD
-            }
-        return self._send_message('post', '/funding/repay',
-                                  data=json.dumps(params))
-
-    def margin_transfer(self, margin_profile_id, transfer_type, currency,
-                        amount):
-        """Transfer funds between your standard profile and a margin profile.
-
-        Args:
-            margin_profile_id (str): Margin profile ID to withdraw or deposit
-                from.
-            transfer_type (str): 'deposit' or 'withdraw'
-            currency (str): Currency to transfer (eg. 'USD')
-            amount (Decimal): Amount to transfer
-
-        Returns:
-            dict: Transfer details. Example::
-                {
-                  "created_at": "2017-01-25T19:06:23.415126Z",
-                  "id": "80bc6b74-8b1f-4c60-a089-c61f9810d4ab",
-                  "user_id": "521c20b3d4ab09621f000011",
-                  "profile_id": "cda95996-ac59-45a3-a42e-30daeb061867",
-                  "margin_profile_id": "45fa9e3b-00ba-4631-b907-8a98cbdf21be",
-                  "type": "deposit",
-                  "amount": "2",
-                  "currency": "USD",
-                  "account_id": "23035fc7-0707-4b59-b0d2-95d0c035f8f5",
-                  "margin_account_id": "e1d9862c-a259-4e83-96cd-376352a9d24d",
-                  "margin_product_id": "BTC-USD",
-                  "status": "completed",
-                  "nonce": 25
-                }
-
-        """
-        params = {'margin_profile_id': margin_profile_id,
-                  'type': transfer_type,
-                  'currency': currency,  # example: USD
-                  'amount': amount}
-        return self._send_message('post', '/profiles/margin-transfer',
-                                  data=json.dumps(params))
-
-    def get_position(self):
-        """Get An overview of your margin profile.
-
-        Returns:
-            dict: Details about funding, accounts, and margin call.
-
-        """
-        return self._send_message('get', '/position')
-
-    def close_position(self, repay_only):
-        """Close position.
-
-        Args:
-            repay_only (bool): Undocumented by Coinbase Pro.
-
-        Returns:
-            Undocumented
-
-        """
-        params = {'repay_only': repay_only}
-        return self._send_message('post', '/position/close',
-                                  data=json.dumps(params))
 
     def deposit(self, amount, currency, payment_method_id):
         """Deposit funds from a payment method.
