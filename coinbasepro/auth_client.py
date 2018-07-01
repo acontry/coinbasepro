@@ -593,7 +593,7 @@ class AuthenticatedClient(PublicClient):
         information regarding payment methods.
 
         Args:
-            amount (Decmial): The amount to deposit.
+            amount (Decimal): The amount to deposit.
             currency (str): The type of currency.
             payment_method_id (str): ID of the payment method.
 
@@ -613,7 +613,7 @@ class AuthenticatedClient(PublicClient):
         return self._send_message('post', '/deposits/payment-method',
                                   data=json.dumps(params))
 
-    def coinbase_deposit(self, amount, currency, coinbase_account_id):
+    def deposit_from_coinbase(self, amount, currency, coinbase_account_id):
         """Deposit funds from a Coinbase account.
 
         You can move funds between your Coinbase accounts and your Coinbase Pro
@@ -670,7 +670,7 @@ class AuthenticatedClient(PublicClient):
         return self._send_message('post', '/withdrawals/payment-method',
                                   data=json.dumps(params))
 
-    def coinbase_withdraw(self, amount, currency, coinbase_account_id):
+    def withdraw_to_coinbase(self, amount, currency, coinbase_account_id):
         """Withdraw funds to a coinbase account.
 
         You can move funds between your Coinbase accounts and your Coinbase Pro
@@ -700,7 +700,7 @@ class AuthenticatedClient(PublicClient):
         return self._send_message('post', '/withdrawals/coinbase',
                                   data=json.dumps(params))
 
-    def crypto_withdraw(self, amount, currency, crypto_address):
+    def withdraw_to_crypto(self, amount, currency, crypto_address):
         """Withdraw funds to a crypto address.
 
         Args:
