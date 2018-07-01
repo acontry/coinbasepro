@@ -9,19 +9,25 @@ class PublicClient(object):
 
     Attributes:
         url (Optional[str]): API URL. Defaults to Coinbase Pro API.
+        session (requests.Session): Persistent HTTP connection object.
+        request_timeout (int): HTTP request timeout (in seconds).
 
     """
 
-    def __init__(self, api_url='https://api.pro.coinbase.com'):
-        """Create Coinbase Pro API public client.
+    def __init__(self,
+                 api_url='https://api.pro.coinbase.com',
+                 request_timeout=30):
+        """Create a Coinbase Pro API public client instance.
 
         Args:
             api_url (Optional[str]): API URL. Defaults to Coinbase Pro API.
+            request_timeout (Optional[int]): Request timeout (in seconds).
 
         """
         self.url = api_url.rstrip('/')
         self.auth = None
         self.session = requests.Session()
+        self.request_timeout = request_timeout
 
     def get_products(self):
         """Get a list of available currency pairs for trading.
@@ -250,8 +256,12 @@ class PublicClient(object):
 
         """
         url = self.url + endpoint
-        r = self.session.request(method, url, params=params, data=data,
-                                 auth=self.auth, timeout=30)
+        r = self.session.request(method,
+                                 url,
+                                 params=params,
+                                 data=data,
+                                 auth=self.auth,
+                                 timeout=self.request_timeout)
         return r.json()
 
     def _send_paginated_message(self, endpoint, params=None):
@@ -281,7 +291,10 @@ class PublicClient(object):
             params = dict()
         url = self.url + endpoint
         while True:
-            r = self.session.get(url, params=params, auth=self.auth, timeout=30)
+            r = self.session.get(url,
+                                 params=params,
+                                 auth=self.auth,
+                                 timeout=self.request_timeout)
             results = r.json()
             for result in results:
                 yield result

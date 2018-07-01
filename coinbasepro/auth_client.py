@@ -18,19 +18,20 @@ class AuthenticatedClient(PublicClient):
         auth (CoinbaseProAuth): Custom authentication handler for each request.
         session (requests.Session): Persistent HTTP connection object.
     """
-    def __init__(self, key, b64secret, passphrase,
-                 api_url='https://api.pro.coinbase.com'):
-        """ Create an instance of the AuthenticatedClient class.
+    def __init__(self, key, secret, passphrase,
+                 api_url='https://api.pro.coinbase.com',
+                 request_timeout=30):
+        """Create an AuthenticatedClient instance.
 
         Args:
             key (str): Your API key.
-            b64secret (str): Your API secret.
+            secret (str): Your API secret.
             passphrase (str): Your API passphrase.
             api_url (Optional[str]): API URL. Defaults to Coinbase Pro API.
+            request_timeout (Optional[int]): Request timeout (in seconds).
         """
-        super(AuthenticatedClient, self).__init__(api_url)
-        self.auth = CoinbaseProAuth(key, b64secret, passphrase)
-        self.session = requests.Session()
+        super(AuthenticatedClient, self).__init__(api_url, request_timeout)
+        self.auth = CoinbaseProAuth(key, secret, passphrase)
 
     def get_account(self, account_id):
         """Get information for a single account.
@@ -962,7 +963,7 @@ class CoinbaseProAuth(AuthBase):
         message = message.encode('ascii')
         hmac_key = base64.b64decode(self.secret_key)
         signature = hmac.new(hmac_key, message, hashlib.sha256)
-        signature_b64 = signature.digest().encode('base64').rstrip('\n')
+        signature_b64 = base64.b64encode(signature.digest())
         request.headers.update({
             'CB-ACCESS-SIGN': signature_b64,
             'CB-ACCESS-TIMESTAMP': timestamp,
