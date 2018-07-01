@@ -945,7 +945,11 @@ class AuthenticatedClient(PublicClient):
 
 
 class CoinbaseProAuth(AuthBase):
-    # Provided by Coinbase Pro: https://docs.gdax.com/#signing-a-message
+    """Request authorization.
+
+    Provided by Coinbase Pro:
+    https://docs.pro.coinbase.com/?python#signing-a-message
+    """
     def __init__(self, api_key, secret_key, passphrase):
         self.api_key = api_key
         self.secret_key = secret_key
@@ -958,12 +962,12 @@ class CoinbaseProAuth(AuthBase):
         message = message.encode('ascii')
         hmac_key = base64.b64decode(self.secret_key)
         signature = hmac.new(hmac_key, message, hashlib.sha256)
-        signature_b64 = base64.b64encode(signature.digest())
+        signature_b64 = signature.digest().encode('base64').rstrip('\n')
         request.headers.update({
-            'Content-Type': 'Application/json',
             'CB-ACCESS-SIGN': signature_b64,
             'CB-ACCESS-TIMESTAMP': timestamp,
             'CB-ACCESS-KEY': self.api_key,
-            'CB-ACCESS-PASSPHRASE': self.passphrase
+            'CB-ACCESS-PASSPHRASE': self.passphrase,
+            'Content-Type': 'application/json'
         })
         return request
