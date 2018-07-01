@@ -11,10 +11,10 @@ from coinbasepro import PublicClient
 
 
 class AuthenticatedClient(PublicClient):
-    """ Provides access to endpoints requiring authentication on the Coinbase Pro API.
+    """Provides access to authenticated requests on the Coinbase Pro API.
 
     Attributes:
-        url (str): The api url for this client instance to use.
+        api_url (str): The api url for this client instance to use.
         auth (CoinbaseProAuth): Custom authentication handler for each request.
         session (requests.Session): Persistent HTTP connection object.
     """
@@ -24,8 +24,8 @@ class AuthenticatedClient(PublicClient):
 
         Args:
             key (str): Your API key.
-            b64secret (str): The secret key matching your API key.
-            passphrase (str): Passphrase chosen when setting up key.
+            b64secret (str): Your API secret.
+            passphrase (str): Your API passphrase.
             api_url (Optional[str]): API URL. Defaults to Coinbase Pro API.
         """
         super(AuthenticatedClient, self).__init__(api_url)
@@ -33,7 +33,7 @@ class AuthenticatedClient(PublicClient):
         self.session = requests.Session()
 
     def get_account(self, account_id):
-        """ Get information for a single account.
+        """Get information for a single account.
 
         Use this endpoint when you know the account_id.
 
@@ -53,7 +53,7 @@ class AuthenticatedClient(PublicClient):
         return self._send_message('get', '/accounts/' + account_id)
 
     def get_accounts(self):
-        """ Get a list of trading all accounts.
+        """Get a list of trading all accounts.
 
         When you place an order, the funds for the order are placed on
         hold. They cannot be used for other orders or withdrawn. Funds
@@ -81,7 +81,7 @@ class AuthenticatedClient(PublicClient):
         return self.get_account('')
 
     def get_account_history(self, account_id, **kwargs):
-        """ List account activity. Account activity either increases or
+        """List account activity. Account activity either increases or
         decreases your account balance.
 
         Entry type indicates the reason for the account change.
@@ -121,7 +121,7 @@ class AuthenticatedClient(PublicClient):
         return self._send_paginated_message(endpoint, params=kwargs)
 
     def get_account_holds(self, account_id, **kwargs):
-        """ Get holds on an account.
+        """Get holds on an account.
 
         This method returns a generator which may make multiple HTTP requests
         while iterating through it.
@@ -166,7 +166,7 @@ class AuthenticatedClient(PublicClient):
         return self._send_paginated_message(endpoint, params=kwargs)
 
     def place_order(self, product_id, side, order_type, **kwargs):
-        """ Place an order.
+        """Place an order.
 
         The three order types (limit, market, and stop) can be placed using this
         method. Specific methods are provided for each order type, but if a
@@ -308,7 +308,7 @@ class AuthenticatedClient(PublicClient):
                            stp=None,
                            overdraft_enabled=None,
                            funding_amount=None):
-        """ Place market order.
+        """Place market order.
 
         Args:
             product_id (str): Product to order (eg. 'BTC-USD')
@@ -349,7 +349,7 @@ class AuthenticatedClient(PublicClient):
                          stp=None,
                          overdraft_enabled=None,
                          funding_amount=None):
-        """ Place stop order.
+        """Place stop order.
 
         Args:
             product_id (str): Product to order (eg. 'BTC-USD')
@@ -388,7 +388,7 @@ class AuthenticatedClient(PublicClient):
         return self.place_order(**params)
 
     def cancel_order(self, order_id):
-        """ Cancel a previously placed order.
+        """Cancel a previously placed order.
 
         If the order had no matches during its lifetime its record may
         be purged. This means the order details will not be available
@@ -410,7 +410,7 @@ class AuthenticatedClient(PublicClient):
         return self._send_message('delete', '/orders/' + order_id)
 
     def cancel_all(self, product_id=None):
-        """ With best effort, cancel all open orders.
+        """With best effort, cancel all open orders.
 
         Args:
             product_id (Optional[str]): Only cancel orders for this
@@ -435,7 +435,7 @@ class AuthenticatedClient(PublicClient):
         return self._send_message('delete', '/orders', data=data)
 
     def get_order(self, order_id):
-        """ Get a single order by order id.
+        """Get a single order by order id.
 
         If the order is canceled the response may have status code 404
         if the order had no matches.
@@ -470,7 +470,7 @@ class AuthenticatedClient(PublicClient):
         return self._send_message('get', '/orders/' + order_id)
 
     def get_orders(self, product_id=None, status=None, **kwargs):
-        """ List your current open orders.
+        """List your current open orders.
 
         This method returns a generator which may make multiple HTTP requests
         while iterating through it.
@@ -535,7 +535,7 @@ class AuthenticatedClient(PublicClient):
         return self._send_paginated_message('/orders', params=params)
 
     def get_fills(self, product_id=None, order_id=None, **kwargs):
-        """ Get a list of recent fills.
+        """Get a list of recent fills.
 
         This method returns a generator which may make multiple HTTP requests
         while iterating through it.
@@ -587,7 +587,7 @@ class AuthenticatedClient(PublicClient):
         return self._send_paginated_message('/fills', params=params)
 
     def get_fundings(self, status=None, **kwargs):
-        """ Every order placed with a margin profile that draws funding
+        """Every order placed with a margin profile that draws funding
         will create a funding record.
 
         This method returns a generator which may make multiple HTTP requests
@@ -626,7 +626,7 @@ class AuthenticatedClient(PublicClient):
         return self._send_paginated_message('/funding', params=params)
 
     def repay_funding(self, amount, currency):
-        """ Repay funding. Repays the older funding records first.
+        """Repay funding. Repays the older funding records first.
 
         Args:
             amount (int): Amount of currency to repay
@@ -645,7 +645,7 @@ class AuthenticatedClient(PublicClient):
 
     def margin_transfer(self, margin_profile_id, transfer_type, currency,
                         amount):
-        """ Transfer funds between your standard profile and a margin profile.
+        """Transfer funds between your standard profile and a margin profile.
 
         Args:
             margin_profile_id (str): Margin profile ID to withdraw or deposit
@@ -681,7 +681,7 @@ class AuthenticatedClient(PublicClient):
                                   data=json.dumps(params))
 
     def get_position(self):
-        """ Get An overview of your margin profile.
+        """Get An overview of your margin profile.
 
         Returns:
             dict: Details about funding, accounts, and margin call.
@@ -690,7 +690,7 @@ class AuthenticatedClient(PublicClient):
         return self._send_message('get', '/position')
 
     def close_position(self, repay_only):
-        """ Close position.
+        """Close position.
 
         Args:
             repay_only (bool): Undocumented by Coinbase Pro.
@@ -704,7 +704,7 @@ class AuthenticatedClient(PublicClient):
                                   data=json.dumps(params))
 
     def deposit(self, amount, currency, payment_method_id):
-        """ Deposit funds from a payment method.
+        """Deposit funds from a payment method.
 
         See AuthenticatedClient.get_payment_methods() to receive
         information regarding payment methods.
@@ -731,7 +731,7 @@ class AuthenticatedClient(PublicClient):
                                   data=json.dumps(params))
 
     def coinbase_deposit(self, amount, currency, coinbase_account_id):
-        """ Deposit funds from a Coinbase account.
+        """Deposit funds from a Coinbase account.
 
         You can move funds between your Coinbase accounts and your Coinbase Pro
         trading accounts within your daily limits. Moving funds between
@@ -761,7 +761,7 @@ class AuthenticatedClient(PublicClient):
                                   data=json.dumps(params))
 
     def withdraw(self, amount, currency, payment_method_id):
-        """ Withdraw funds to a payment method.
+        """Withdraw funds to a payment method.
 
         See AuthenticatedClient.get_payment_methods() to receive
         information regarding payment methods.
@@ -788,7 +788,7 @@ class AuthenticatedClient(PublicClient):
                                   data=json.dumps(params))
 
     def coinbase_withdraw(self, amount, currency, coinbase_account_id):
-        """ Withdraw funds to a coinbase account.
+        """Withdraw funds to a coinbase account.
 
         You can move funds between your Coinbase accounts and your Coinbase Pro
         trading accounts within your daily limits. Moving funds between
@@ -818,7 +818,7 @@ class AuthenticatedClient(PublicClient):
                                   data=json.dumps(params))
 
     def crypto_withdraw(self, amount, currency, crypto_address):
-        """ Withdraw funds to a crypto address.
+        """Withdraw funds to a crypto address.
 
         Args:
             amount (Decimal): The amount to withdraw
@@ -841,7 +841,7 @@ class AuthenticatedClient(PublicClient):
                                   data=json.dumps(params))
 
     def get_payment_methods(self):
-        """ Get a list of your payment methods.
+        """Get a list of your payment methods.
 
         Returns:
             list: Payment method details.
@@ -850,7 +850,7 @@ class AuthenticatedClient(PublicClient):
         return self._send_message('get', '/payment-methods')
 
     def get_coinbase_accounts(self):
-        """ Get a list of your coinbase accounts.
+        """Get a list of your coinbase accounts.
 
         Returns:
             list: Coinbase account details.
@@ -860,7 +860,7 @@ class AuthenticatedClient(PublicClient):
 
     def create_report(self, report_type, start_date, end_date, product_id=None,
                       account_id=None, report_format='pdf', email=None):
-        """ Create report of historic information about your account.
+        """Create report of historic information about your account.
 
         The report will be generated when resources are available. Report status
         can be queried via `get_report(report_id)`.
@@ -908,7 +908,7 @@ class AuthenticatedClient(PublicClient):
                                   data=json.dumps(params))
 
     def get_report(self, report_id):
-        """ Get report status.
+        """Get report status.
 
         Use to query a specific report once it has been requested.
 
@@ -922,7 +922,7 @@ class AuthenticatedClient(PublicClient):
         return self._send_message('get', '/reports/' + report_id)
 
     def get_trailing_volume(self):
-        """  Get your 30-day trailing volume for all products.
+        """Get your 30-day trailing volume for all products.
 
         This is a cached value that's calculated every day at midnight UTC.
 
