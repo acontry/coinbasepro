@@ -1,7 +1,10 @@
 import setuptools
 
 with open('README.rst', 'r') as fh:
-    long_description = fh.read()
+    readme = fh.read()
+
+with open('HISTORY.rst', 'r') as f:
+    history = f.read()
 
 
 requires = [
@@ -10,9 +13,9 @@ requires = [
 
 setuptools.setup(
     name='coinbasepro',
-    version='0.0.1',
+    version='0.0.2',
     description='A Python interface for the Coinbase Pro API.',
-    long_description=long_description,
+    long_description=readme + '\n\n' + history,
     long_description_content_type='text/x-rst',
     author='Alex Contryman',
     author_email='acontry@gmail.com',
@@ -26,6 +29,10 @@ setuptools.setup(
         'Natural Language :: English',
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 3'
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7'
     ),
 )
