@@ -165,29 +165,42 @@ class AuthenticatedClient(PublicClient):
         endpoint = '/accounts/{}/holds'.format(account_id)
         return self._send_paginated_message(endpoint, params=kwargs)
 
-    def place_order(self, product_id, side, order_type, **kwargs):
+    def place_order(self, product_id, side, order_type,
+                    stop=None,
+                    stop_price=None,
+                    client_oid=None,
+                    stp=None,
+                    **kwargs):
         """Place an order.
 
-        The three order types (limit, market, and stop) can be placed using this
+        The two order types (limit and market) can be placed using this
         method. Specific methods are provided for each order type, but if a
         more generic interface is desired this method is available.
 
         Args:
             product_id (str): Product to order (eg. 'BTC-USD')
             side (str): Order side ('buy' or 'sell)
-            order_type (str): Order type ('limit', 'market', or 'stop')
-            **client_oid (str): Order ID selected by you to identify your order.
+            order_type (str): Order type ('limit' or 'market')
+            stop (Optional[str]): Sets the type of stop order. There are two
+                options:
+                'loss': Triggers when the last trade price changes to a value at
+                    or below the `stop_price`.
+                'entry: Triggers when the last trade price changes to a value at
+                    or above the `stop_price`.
+                `stop_price` must be set when a stop order is specified.
+            stop_price (Optional[Decimal]): Trigger price for stop order.
+            client_oid (str): Order ID selected by you to identify your order.
                 This should be a UUID, which will be broadcast in the public
                 feed for `received` messages.
-            **stp (str): Self-trade prevention flag. Coinbase Pro doesn't allow
+            stp (str): Self-trade prevention flag. Coinbase Pro doesn't allow
                 self-trading. This behavior can be modified with this flag.
                 Options:
-                'dc'	Decrease and Cancel (default)
-                'co'	Cancel oldest
-                'cn'	Cancel newest
-                'cb'	Cancel both
-            **kwargs: Additional arguments can be specified for different order
-                types. See the limit/market/stop order methods for details.
+                'dc': Decrease and Cancel (default)
+                'co': Cancel oldest
+                'cn': Cancel newest
+                'cb': Cancel both
+            kwargs: Additional arguments can be specified for different order
+                types. See the limit/market order methods for details.
 
         Returns:
             dict: Order details. Example::
@@ -221,27 +234,30 @@ class AuthenticatedClient(PublicClient):
                 raise ValueError('post_only is invalid when time in force is '
                                  '`IOC` or `FOK`')
 
-        # Market and stop order checks
-        if order_type == 'market' or order_type == 'stop':
-            if not (kwargs.get('size') is None) ^ (kwargs.get('funds') is None):
-                raise ValueError('Either `size` or `funds` must be specified '
-                                 'for market/stop orders (but not both).')
+        # Stop order checks
+        if (stop is not None) ^ (stop_price is not None):
+            raise ValueError('Both `stop` and `stop_price` must be specified at'
+                             'the same time.')
 
         # Build params dict
         params = {'product_id': product_id,
                   'side': side,
-                  'type': order_type}
+                  'type': order_type,
+                  'stop': stop,
+                  'stop_price': stop_price,
+                  'client_oid': client_oid,
+                  'stp': stp}
         params.update(kwargs)
         return self._send_message('post', '/orders', data=json.dumps(params))
 
     def place_limit_order(self, product_id, side, price, size,
+                          stop=None,
+                          stop_price=None,
                           client_oid=None,
                           stp=None,
                           time_in_force=None,
                           cancel_after=None,
-                          post_only=None,
-                          overdraft_enabled=None,
-                          funding_amount=None):
+                          post_only=None):
         """Place a limit order.
 
         Args:
@@ -249,6 +265,14 @@ class AuthenticatedClient(PublicClient):
             side (str): Order side ('buy' or 'sell)
             price (Decimal): Price per cryptocurrency
             size (Decimal): Amount of cryptocurrency to buy or sell
+            stop (Optional[str]): Sets the type of stop order. There are two
+                options:
+                'loss': Triggers when the last trade price changes to a value at
+                    or below the `stop_price`.
+                'entry: Triggers when the last trade price changes to a value at
+                    or above the `stop_price`.
+                `stop_price` must be set when a stop order is specified.
+            stop_price (Optional[Decimal]): Trigger price for stop order.
             client_oid (Optional[str]): User-specified Order ID
             stp (Optional[str]): Self-trade prevention flag. See `place_order`
                 for details.
@@ -263,12 +287,6 @@ class AuthenticatedClient(PublicClient):
                 make liquidity. If any part of the order results in taking
                 liquidity, the order will be rejected and no part of it will
                 execute.
-            overdraft_enabled (Optional[bool]): If true funding above and
-                beyond the account balance will be provided by margin, as
-                necessary.
-            funding_amount (Optional[Decimal]): Amount of margin funding to be
-                provided for the order. Mutually exclusive with
-                `overdraft_enabled`.
 
         Returns:
             dict: Order details. See `place_order` for example.
@@ -279,40 +297,46 @@ class AuthenticatedClient(PublicClient):
                   'order_type': 'limit',
                   'price': price,
                   'size': size,
+                  'stop': stop,
+                  'stop_price': stop_price,
                   'client_oid': client_oid,
                   'stp': stp,
                   'time_in_force': time_in_force,
                   'cancel_after': cancel_after,
-                  'post_only': post_only,
-                  'overdraft_enabled': overdraft_enabled,
-                  'funding_amount': funding_amount}
+                  'post_only': post_only}
         params = dict((k, v) for k, v in params.items() if v is not None)
 
         return self.place_order(**params)
 
     def place_market_order(self, product_id, side, size=None, funds=None,
+                           stop=None,
+                           stop_price=None,
                            client_oid=None,
-                           stp=None,
-                           overdraft_enabled=None,
-                           funding_amount=None):
+                           stp=None):
         """Place market order.
+
+        `size` and `funds` parameters specify the order amount. `funds` will
+        limit how much of your quote currency account balance is used and `size`
+        will limit the crypto amount transacted.
 
         Args:
             product_id (str): Product to order (eg. 'BTC-USD')
             side (str): Order side ('buy' or 'sell)
-            size (Optional[Decimal]): Desired amount in crypto. Specify this or
-                `funds`.
+            size (Optional[Decimal]): Desired amount in crypto. Specify this
+                and/or `funds`.
             funds (Optional[Decimal]): Desired amount of quote currency to use.
-                Specify this or `size`.
+                Specify this and/or `size`.
+            stop (Optional[str]): Sets the type of stop order. There are two
+                options:
+                'loss': Triggers when the last trade price changes to a value at
+                    or below the `stop_price`.
+                'entry: Triggers when the last trade price changes to a value at
+                    or above the `stop_price`.
+                `stop_price` must be set when a stop order is specified.
+            stop_price (Optional[Decimal]): Trigger price for stop order.
             client_oid (Optional[str]): User-specified Order ID
             stp (Optional[str]): Self-trade prevention flag. See `place_order`
                 for details.
-            overdraft_enabled (Optional[bool]): If true funding above and
-                beyond the account balance will be provided by margin, as
-                necessary.
-            funding_amount (Optional[Decimal]): Amount of margin funding to be
-                provided for the order. Mutually exclusive with
-                `overdraft_enabled`.
 
         Returns:
             dict: Order details. See `place_order` for example.
@@ -323,53 +347,10 @@ class AuthenticatedClient(PublicClient):
                   'order_type': 'market',
                   'size': size,
                   'funds': funds,
+                  'stop': stop,
+                  'stop_price': stop_price,
                   'client_oid': client_oid,
-                  'stp': stp,
-                  'overdraft_enabled': overdraft_enabled,
-                  'funding_amount': funding_amount}
-        params = dict((k, v) for k, v in params.items() if v is not None)
-
-        return self.place_order(**params)
-
-    def place_stop_order(self, product_id, side, price, size=None, funds=None,
-                         client_oid=None,
-                         stp=None,
-                         overdraft_enabled=None,
-                         funding_amount=None):
-        """Place stop order.
-
-        Args:
-            product_id (str): Product to order (eg. 'BTC-USD')
-            side (str): Order side ('buy' or 'sell)
-            price (Decimal): Desired price at which the stop order triggers.
-            size (Optional[Decimal]): Desired amount in crypto. Specify this or
-                `funds`.
-            funds (Optional[Decimal]): Desired amount of quote currency to use.
-                Specify this or `size`.
-            client_oid (Optional[str]): User-specified Order ID
-            stp (Optional[str]): Self-trade prevention flag. See `place_order`
-                for details.
-            overdraft_enabled (Optional[bool]): If true funding above and
-                beyond the account balance will be provided by margin, as
-                necessary.
-            funding_amount (Optional[Decimal]): Amount of margin funding to be
-                provided for the order. Mutually exclusive with
-                `overdraft_enabled`.
-
-        Returns:
-            dict: Order details. See `place_order` for example.
-
-        """
-        params = {'product_id': product_id,
-                  'side': side,
-                  'price': price,
-                  'order_type': 'stop',
-                  'size': size,
-                  'funds': funds,
-                  'client_oid': client_oid,
-                  'stp': stp,
-                  'overdraft_enabled': overdraft_enabled,
-                  'funding_amount': funding_amount}
+                  'stp': stp}
         params = dict((k, v) for k, v in params.items() if v is not None)
 
         return self.place_order(**params)
