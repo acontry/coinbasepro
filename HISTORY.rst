@@ -8,6 +8,17 @@ dev
 
 - [Short description of non-trivial change.]
 
+0.0.4 (2018-08-15)
+++++++++++++++++++
+
+**Improvements**
+
+- Updated stop orders to latest API.
+
+**Bugfixes**
+
+- Fix issue with time in force error checking.
+
 0.0.3 (2018-07-07)
 ++++++++++++++++++
 
