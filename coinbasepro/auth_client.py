@@ -186,12 +186,6 @@ class AuthenticatedClient(PublicClient):
                 'co'	Cancel oldest
                 'cn'	Cancel newest
                 'cb'	Cancel both
-            **overdraft_enabled (Optional[bool]): If true funding above and
-                beyond the account balance will be provided by margin, as
-                necessary.
-            **funding_amount (Optional[Decimal]): Amount of margin funding to be
-                provided for the order. Mutually exclusive with
-                `overdraft_enabled`.
             **kwargs: Additional arguments can be specified for different order
                 types. See the limit/market/stop order methods for details.
 
@@ -216,21 +210,14 @@ class AuthenticatedClient(PublicClient):
             }
 
         """
-        # Margin parameter checks
-        if kwargs.get('overdraft_enabled') is not None and \
-                kwargs.get('funding_amount') is not None:
-            raise ValueError('Margin funding must be specified through use of '
-                             'overdraft or by setting a funding amount, but not'
-                             ' both')
-
         # Limit order checks
         if order_type == 'limit':
             if kwargs.get('cancel_after') is not None and \
-                    kwargs.get('tif') != 'GTT':
+                    kwargs.get('time_in_force') != 'GTT':
                 raise ValueError('May only specify a cancel period when time '
                                  'in_force is `GTT`')
-            if kwargs.get('post_only') is not None and kwargs.get('tif') in \
-                    ['IOC', 'FOK']:
+            if kwargs.get('post_only') is not None and \
+                    kwargs.get('time_in_force') in ['IOC', 'FOK']:
                 raise ValueError('post_only is invalid when time in force is '
                                  '`IOC` or `FOK`')
 
