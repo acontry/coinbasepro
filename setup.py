@@ -17,6 +17,7 @@ setuptools.setup(
     description='A Python interface for the Coinbase Pro API.',
     long_description=readme + '\n\n' + history,
     long_description_content_type='text/x-rst',
+    license='MIT',
     author='Alex Contryman',
     author_email='acontry@gmail.com',
     url='https://github.com/acontry/coinbasepro',
@@ -24,7 +25,7 @@ setuptools.setup(
     python_requires='>=3.4.x',
     install_requires=requires,
     classifiers=(
-        'Development Status :: 5 - Production/Stable',
+        'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
         'Natural Language :: English',
         'License :: OSI Approved :: MIT License',
