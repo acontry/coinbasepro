@@ -8,7 +8,7 @@ dev
 
 - [Short description of non-trivial change.]
 
-0.0.4 (2018-08-15)
+0.0.4 (2018-07-15)
 ++++++++++++++++++
 
 **Improvements**
