@@ -7,3 +7,4 @@ requests-toolbelt==0.8.0
 tqdm==4.23.4
 twine==1.11.0
 urllib3==1.23
+websocket-client==0.40.0
