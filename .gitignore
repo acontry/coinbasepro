@@ -1,6 +1,8 @@
 venv/
 .idea
 
+.DS_Store
+
 build/
 dist
 coinbasepro.egg-info/
