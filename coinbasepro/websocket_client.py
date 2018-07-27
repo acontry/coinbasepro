@@ -1,15 +1,14 @@
 # -*- coding: utf-8 -*-
 
 # Python Standard Library imports
-from __future__ import print_function
-import logging
-import json
 import base64
-import hmac
+from datetime import datetime
 import hashlib
+import hmac
+import json
+import logging
 import time
 from threading import Thread
-from datetime import datetime
 
 # Other imports
 from websocket import create_connection, WebSocketConnectionClosedException
@@ -35,7 +34,7 @@ class WebsocketClient(object):
         Args:
             url (str): Coinbase Pro websocket endpoint.
             products (str or list): Currency pairings to subscribe.
-            should_print (bool): Print data to stdout.
+            shouldself._print (bool): Print data to stdout.
             logfile (str): Path to file. Websocket feed is dumped to this file.
             auth (bool): Authenticate the client.
             key (str): Your API key.
@@ -129,42 +128,45 @@ class WebsocketClient(object):
                 self.ws.close()
         except WebSocketConnectionClosedException as e:
             pass
-        self.on_close()
+        self.close()
         return None
 
     def close(self):
         self.stop = True
         self.thread.join()
+        self.on_close()
         return None
 
     def on_open(self):
+        """ Logs / prints Websocket start. """
         utc_now = datetime.utcnow()
         sub_message = "-- Subscribed at {} UTC --".format(utc_now)
         logging.info(sub_message)
-        _print(sub_message + '\n')  # newline for legibility
+        self._print(sub_message + '\n')  # newline for legibility
         return None
 
     def on_close(self):
+        """ Logs / prints Websocket close. """
         utc_now = datetime.utcnow()
         closed_message = "-- Socket Closed at {} UTC --".format(utc_now)
         logging.info(closed_message)
-        _print('\n' + closed_message)  # newline for legibility
+        self._print('\n' + closed_message)  # newline for legibility
         return None
 
     def on_message(self, msg):
         if self.logfile:
             with open(self.logfile, 'a') as f:
                 f.write(msg + '\n')
-        _print(msg)
+        self._print(msg)
         return None
 
     def on_error(self, e, data=None):
         logging.info(e)
         self.stop = True
-        _print('{} - data: {}'.format(e, data))
+        self._print('{} - data: {}'.format(e, data))
         return None
 
-    def _print(msg):
+    def _print(self, msg):
         if self.should_print:
             print(msg)
         return None
