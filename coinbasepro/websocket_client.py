@@ -28,7 +28,7 @@ class WebsocketClient(object):
                  key="",
                  secret="",
                  passphrase="",
-                 channels=None,
+                 channels=["full"],
                  keepalive_timer=30):
         """Instantiates a WebsocketClient.
 
@@ -41,7 +41,7 @@ class WebsocketClient(object):
             key (str): Your API key.
             secret (str): Your API secret.
             passphrase (str): Your API passphrase.
-            channels (str): Channels to subscribe to.
+            channels (list): Channels to subscribe to.
             keepalive_timer (int): Host keepalive/ping interval.
         """
         self.url = url
