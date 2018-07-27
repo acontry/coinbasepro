@@ -67,6 +67,7 @@ class WebsocketClient(object):
         self.on_open()
         self.thread = Thread(target=_go)
         self.thread.start()
+        return None
 
     def _connect(self):
         if self.products is None:
@@ -102,6 +103,7 @@ class WebsocketClient(object):
 
         logging.info('Websocket subscription params = "{}"'.format(sub_params))
         self.ws.send(json.dumps(sub_params))
+        return None
 
     def _listen(self):
         while not self.stop:
@@ -139,16 +141,16 @@ class WebsocketClient(object):
 
     def on_open(self):
         utc_now = datetime.utcnow()
-        sub_message = "-- Subscribed at {} UTC --\n".format(utc_now)
+        sub_message = "-- Subscribed at {} UTC --".format(utc_now)
         logging.info(sub_message)
-        _print(sub_message)
+        _print(sub_message + '\n')  # newline for legibility
         return None
 
     def on_close(self):
         utc_now = datetime.utcnow()
-        closed_message = "\n-- Socket Closed at {} UTC --".format(utc_now)
+        closed_message = "-- Socket Closed at {} UTC --".format(utc_now)
         logging.info(closed_message)
-        _print(closed_message)
+        _print('\n' + closed_message)  # newline for legibility
         return None
 
     def on_message(self, msg):
