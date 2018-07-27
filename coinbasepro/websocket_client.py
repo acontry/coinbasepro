@@ -32,6 +32,9 @@ class WebsocketClient(object):
                  keepalive_timer=30):
         """Instantiates a WebsocketClient.
 
+        Link to Coinbase Pro documentation:
+            "docs.pro.coinbase.com/#the-code-classprettyprintfullcode-channel"
+
         Args:
             url (str): Coinbase Pro websocket endpoint.
             products (str or list): Currency pairings to subscribe.
