@@ -133,7 +133,10 @@ class WebsocketClient(object):
 
     def close(self):
         self.stop = True
-        self.thread.join()
+        try:
+            self.thread.join()
+        except Exception as e:
+            logging.info(e)
         self.on_close()
         return None
 
