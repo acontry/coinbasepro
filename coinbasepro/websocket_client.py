@@ -14,9 +14,6 @@ from threading import Thread
 from websocket import create_connection, WebSocketConnectionClosedException
 
 
-## TODO: interpret json from websocket ?
-
-
 DEFAULT_PRODUCTS = ["BTC-USD", "ETH-USD", "LTC-USD", "BCH-USD"]
 
 
