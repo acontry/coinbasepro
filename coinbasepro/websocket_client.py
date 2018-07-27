@@ -9,6 +9,7 @@ import hmac
 import hashlib
 import time
 from threading import Thread
+from datetime import datetime
 
 # Other imports
 from websocket import create_connection, WebSocketConnectionClosedException
@@ -46,7 +47,6 @@ class WebsocketClient(object):
         self.products = products
         self.channels = channels
         self.stop = False
-        self.error = None
         self.ws = None
         self.thread = None
         self.auth = auth
@@ -138,25 +138,33 @@ class WebsocketClient(object):
         return None
 
     def on_open(self):
-        if self.should_print:
-            print("-- Subscribed! --\n")
+        utc_now = datetime.utcnow()
+        sub_message = "-- Subscribed at {} UTC --\n".format(utc_now)
+        logging.info(sub_message)
+        _print(sub_message)
         return None
 
     def on_close(self):
-        if self.should_print:
-            print("\n-- Socket Closed --")
+        utc_now = datetime.utcnow()
+        closed_message = "\n-- Socket Closed at {} UTC --".format(utc_now)
+        logging.info(closed_message)
+        _print(closed_message)
         return None
 
     def on_message(self, msg):
         if self.logfile:
             with open(self.logfile, 'a') as f:
                 f.write(msg + '\n')
-        if self.should_print:
-            print(msg)
+        _print(msg)
         return None
 
     def on_error(self, e, data=None):
-        self.error = e
+        logging.info(e)
         self.stop = True
-        print('{} - data: {}'.format(e, data))
+        _print('{} - data: {}'.format(e, data))
+        return None
+
+    def _print(msg):
+        if self.should_print:
+            print(msg)
         return None
