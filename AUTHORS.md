@@ -1,8 +1,9 @@
 ## Authors
 * Alex Contryman
+* Drew Rice
 
 ## Acknowledgements
-This package was derived from: 
+This package was derived from:
 
 ###GDAX-Python
 
