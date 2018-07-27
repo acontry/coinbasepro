@@ -129,8 +129,6 @@ class WebsocketClient(object):
                 self.ws.close()
         except WebSocketConnectionClosedException as e:
             pass
-        return None
-
         self.on_close()
         return None
 
