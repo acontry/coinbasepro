@@ -28,7 +28,8 @@ class WebsocketClient(object):
                  key="",
                  secret="",
                  passphrase="",
-                 channels=None):
+                 channels=None,
+                 keepalive_timer=30):
         """Instantiates a WebsocketClient.
 
         Args:
@@ -41,6 +42,7 @@ class WebsocketClient(object):
             secret (str): Your API secret.
             passphrase (str): Your API passphrase.
             channels (str): Channels to subscribe to.
+            keepalive_timer (int): Host keepalive/ping interval.
         """
         self.url = url
         self.products = products
@@ -54,6 +56,7 @@ class WebsocketClient(object):
         self.passphrase = passphrase
         self.should_print = should_print
         self.logfile = logfile
+        self.keepalive_timer = keepalive_timer
         return None
 
     def start(self):
@@ -108,8 +111,7 @@ class WebsocketClient(object):
         while not self.stop:
             try:
                 start_t = 0
-                if time.time() - start_t >= 30:
-                    # Set a 30 second ping to keep connection alive
+                if time.time() - start_t >= self.keepalive_timer:
                     self.ws.ping("keepalive")
                     start_t = time.time()
                 data = self.ws.recv()
