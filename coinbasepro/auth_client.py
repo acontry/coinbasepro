@@ -1,12 +1,17 @@
+# -*- coding: utf-8 -*-
+
+# Python Standard Library imports
 import base64
 import hashlib
 import hmac
 import json
 import time
 
+# Other imports
 import requests
 from requests.auth import AuthBase
 
+# Package-specific imports
 from coinbasepro import PublicClient
 
 

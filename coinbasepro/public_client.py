@@ -1,5 +1,6 @@
-import requests
+# -*- coding: utf-8 -*-
 
+import requests
 
 class PublicClient(object):
     """Coinbase Pro public client API.
