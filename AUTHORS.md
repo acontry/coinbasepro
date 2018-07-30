@@ -5,7 +5,7 @@
 ## Acknowledgements
 This package was derived from:
 
-###GDAX-Python
+### GDAX-Python
 
 Copyright (c) 2017 Daniel Paquin
 
