@@ -14,14 +14,11 @@ from threading import Thread
 from websocket import create_connection, WebSocketConnectionClosedException
 
 
-DEFAULT_PRODUCTS = ["BTC-USD", "ETH-USD", "LTC-USD", "BCH-USD"]
-
-
 class WebsocketClient(object):
     """ Provides WebsocketClient connectivity for the Coinbase Pro API. """
     def __init__(self,
                  url="wss://ws-feed.pro.coinbase.com",
-                 products=None,
+                 products=["BTC-USD", "ETH-USD", "LTC-USD", "BCH-USD"],
                  should_print=False,
                  logfile=None,
                  auth=False,
@@ -47,8 +44,6 @@ class WebsocketClient(object):
             channels (list): Channels to subscribe to.
             keepalive_timer (int): Host keepalive/ping interval.
         """
-        self.url = url
-        self.products = products
         self.channels = channels
         self.stop = False
         self.ws = None
@@ -60,6 +55,16 @@ class WebsocketClient(object):
         self.should_print = should_print
         self.logfile = logfile
         self.keepalive_timer = keepalive_timer
+
+        # variable handling
+        self.url = url
+        if self.url[-1] == "/":  # remove trailing slash from URL
+            self.url = self.url[:-1]
+
+        self.products = products
+        if not isinstance(self.products, list):  # API expects an array
+            self.products = [self.products]
+
         return None
 
     def start(self):
@@ -75,14 +80,6 @@ class WebsocketClient(object):
         return None
 
     def _connect(self):
-        if self.products is None:
-            self.products = DEFAULT_PRODUCTS
-        elif not isinstance(self.products, list):
-            self.products = [self.products]
-
-        if self.url[-1] == "/":
-            self.url = self.url[:-1]
-
         if self.channels is None:
             sub_params = {'type': 'subscribe', 'product_ids': self.products}
         else:
@@ -106,7 +103,8 @@ class WebsocketClient(object):
 
         self.ws = create_connection(self.url)
 
-        logging.info('Websocket subscription params = "{}"'.format(sub_params))
+        logging.info('Websocket subscription params = "{}"'.format(
+            {k:v for k,v in sub_params if k != "passphrase"}))  # don't log pass
         self.ws.send(json.dumps(sub_params))
         return None
 
