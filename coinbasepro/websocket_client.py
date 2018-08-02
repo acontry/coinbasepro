@@ -104,7 +104,7 @@ class WebsocketClient(object):
         self.ws = create_connection(self.url)
 
         logging.info('Websocket subscription params = "{}"'.format(
-            {k:v for k,v in sub_params if k != "passphrase"}))  # don't log pass
+            {k:v for k,v in sub_params.items() if k != "passphrase"}))  # don't log pass
         self.ws.send(json.dumps(sub_params))
         return None
 
