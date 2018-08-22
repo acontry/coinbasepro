@@ -1,5 +1,8 @@
 import requests
 
+from coinbasepro.exceptions import (CoinbaseAPIError, BadRequest, InvalidAPIKey,
+                                    InvalidAuthorization, RateLimitError)
+
 
 class PublicClient(object):
     """Coinbase Pro public client API.
@@ -242,6 +245,22 @@ class PublicClient(object):
         """
         return self._send_message('get', '/time')
 
+    @staticmethod
+    def check_errors_and_raise(response):
+        """Check for error codes and raise an exception if necessary."""
+        if 400 <= response.status_code < 600:
+            message = response.json()['message']
+            if response.status_code == 400:
+                raise BadRequest(message)
+            elif response.status_code == 401:
+                raise InvalidAPIKey(message)
+            elif response.status_code == 403:
+                raise InvalidAuthorization(message)
+            elif response.status_code == 429:
+                raise RateLimitError(message)
+            else:
+                raise CoinbaseAPIError(message)
+
     def _send_message(self, method, endpoint, params=None, data=None):
         """Send API request.
 
@@ -262,6 +281,7 @@ class PublicClient(object):
                                  data=data,
                                  auth=self.auth,
                                  timeout=self.request_timeout)
+        self.check_errors_and_raise(r)
         return r.json()
 
     def _send_paginated_message(self, endpoint, params=None):
@@ -295,6 +315,7 @@ class PublicClient(object):
                                  params=params,
                                  auth=self.auth,
                                  timeout=self.request_timeout)
+            self.check_errors_and_raise(r)
             results = r.json()
             for result in results:
                 yield result
