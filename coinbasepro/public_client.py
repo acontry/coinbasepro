@@ -1,4 +1,6 @@
 import requests
+from datetime import datetime
+from decimal import Decimal
 
 from coinbasepro.exceptions import (CoinbaseAPIError, BadRequest, InvalidAPIKey,
                                     InvalidAuthorization, RateLimitError)
@@ -50,7 +52,11 @@ class PublicClient(object):
                 ]
 
         """
-        return self._send_message('get', '/products')
+        field_conversions = {'base_min_size': Decimal,
+                             'base_max_size': Decimal,
+                             'quote_increment': Decimal}
+        r = self._send_message('get', '/products')
+        return self._convert_list_of_dicts(r, field_conversions)
 
     def get_product_order_book(self, product_id, level=1):
         """Get a list of open orders for a product.
@@ -114,8 +120,15 @@ class PublicClient(object):
                 }
 
         """
-        return self._send_message('get',
-                                  '/products/{}/ticker'.format(product_id))
+        field_conversions = {'trade_id': int,
+                             'price': Decimal,
+                             'size': Decimal,
+                             'bid': Decimal,
+                             'ask': Decimal,
+                             'volume': Decimal,
+                             'time': self.parse_datetime}
+        r = self._send_message('get', '/products/{}/ticker'.format(product_id))
+        return self._convert_dict(r, field_conversions)
 
     def get_product_trades(self, product_id):
         """List the latest trades for a product.
@@ -143,8 +156,14 @@ class PublicClient(object):
                 }]
 
         """
-        return self._send_paginated_message('/products/{}/trades'
-                                            .format(product_id))
+        field_conversions = {'time': self.parse_datetime,
+                             'trade_id': int,
+                             'price': Decimal,
+                             'size': Decimal}
+        r = self._send_paginated_message('/products/{}/trades'
+                                         .format(product_id))
+        for trade in r:
+            yield self._convert_dict(trade, field_conversions)
 
     def get_product_historic_rates(self, product_id, start=None, end=None,
                                    granularity=None):
@@ -156,6 +175,8 @@ class PublicClient(object):
 
         Historical rate data may be incomplete. No data is published for
         intervals where there are no ticks.
+
+        TODO: Convert to generator
 
         **Caution**: Historical rates should not be polled frequently.
         If you need real-time information, use the trade and book
@@ -183,6 +204,16 @@ class PublicClient(object):
                 ]
 
         """
+        def convert_candle(c):
+            out = dict()
+            out['time'] = datetime.utcfromtimestamp(c[0])
+            out['low'] = c[1]
+            out['high'] = c[2]
+            out['open'] = c[3]
+            out['close'] = c[4]
+            out['volume'] = c[5]
+            return out
+
         params = {}
         if start is not None:
             params['start'] = start
@@ -190,8 +221,9 @@ class PublicClient(object):
             params['end'] = end
         if granularity is not None:
             params['granularity'] = granularity
-        return self._send_message('get',
-                                  '/products/{}/candles'.format(product_id))
+        candles = self._send_message('get', '/products/{}/candles'
+                                     .format(product_id))
+        return [convert_candle(c) for c in candles]
 
     def get_product_24hr_stats(self, product_id):
         """Get 24 hr stats for the product.
@@ -210,8 +242,15 @@ class PublicClient(object):
                     }
 
         """
-        return self._send_message('get',
-                                  '/products/{}/stats'.format(product_id))
+        field_conversions = {'open': Decimal,
+                             'high': Decimal,
+                             'low': Decimal,
+                             'volume': Decimal,
+                             'last': Decimal,
+                             'volume_30day': Decimal}
+        stats = self._send_message('get', '/products/{}/stats'
+                                   .format(product_id))
+        return self._convert_dict(stats, field_conversions)
 
     def get_currencies(self):
         """List known currencies.
@@ -229,7 +268,9 @@ class PublicClient(object):
                 }]
 
         """
-        return self._send_message('get', '/currencies')
+        field_conversions = {'min_size': Decimal}
+        currencies = self._send_message('get', '/currencies')
+        return self._convert_list_of_dicts(currencies, field_conversions)
 
     def get_time(self):
         """Get the API server time.
@@ -243,7 +284,9 @@ class PublicClient(object):
                     }
 
         """
-        return self._send_message('get', '/time')
+        field_conversions = {'iso': self.parse_datetime}
+        times = self._send_message('get', '/time')
+        return self._convert_dict(times, field_conversions)
 
     @staticmethod
     def check_errors_and_raise(response):
@@ -261,7 +304,7 @@ class PublicClient(object):
             else:
                 raise CoinbaseAPIError(message)
 
-    def _send_message(self, method, endpoint, params=None, data=None):
+    def _send_message(self, method, endpoint, params=None, data=None, decimal_fields=None):
         """Send API request.
 
         Args:
@@ -282,7 +325,7 @@ class PublicClient(object):
                                  auth=self.auth,
                                  timeout=self.request_timeout)
         self.check_errors_and_raise(r)
-        return r.json()
+        return r.json(parse_float=Decimal)
 
     def _send_paginated_message(self, endpoint, params=None):
         """ Send API message that results in a paginated response.
@@ -316,7 +359,7 @@ class PublicClient(object):
                                  auth=self.auth,
                                  timeout=self.request_timeout)
             self.check_errors_and_raise(r)
-            results = r.json()
+            results = r.json(parse_float=Decimal)
             for result in results:
                 yield result
             # If there are no more pages, we're done. Otherwise update `after`
@@ -328,3 +371,22 @@ class PublicClient(object):
                 break
             else:
                 params['after'] = r.headers['cb-after']
+
+    @staticmethod
+    def parse_datetime(dt):
+        return datetime.strptime(dt, '%Y-%m-%dT%H:%M:%S.%fZ')
+
+    @staticmethod
+    def _convert_dict(r, field_conversions):
+        for field, converter in field_conversions.items():
+            r[field] = converter(r[field])
+        return r
+
+    @staticmethod
+    def _convert_list(r, field_conversions):
+        return [conversion(x) for x, conversion in zip(r, field_conversions)]
+
+    @classmethod
+    def _convert_list_of_dicts(cls, r, field_conversions):
+        return [cls._convert_dict(x, field_conversions) for x in r]
+
