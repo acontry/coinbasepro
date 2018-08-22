@@ -4,7 +4,6 @@ import hmac
 import json
 import time
 
-import requests
 from requests.auth import AuthBase
 
 from coinbasepro import PublicClient
@@ -76,7 +75,6 @@ class AuthenticatedClient(PublicClient):
                     }
                 ]
 
-        * Additional info included in response for margin accounts.
         """
         return self.get_account('')
 
