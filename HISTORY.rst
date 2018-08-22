@@ -8,6 +8,13 @@ dev
 
 - [Short description of non-trivial change.]
 
+0.0.5 (2018-08-21)
+++++++++++++++++++
+
+**Improvements**
+
+- Add exceptions for Coinbase error responses.
+
 0.0.4 (2018-07-15)
 ++++++++++++++++++
 
