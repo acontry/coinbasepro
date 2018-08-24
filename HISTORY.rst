@@ -8,6 +8,18 @@ dev
 
 - [Short description of non-trivial change.]
 
+0.0.6 (2018-08-23)
+++++++++++++++++++
+
+**Improvements**
+
+- Update parameter validation for `get_fills` to reflect Coinbase API change.
+
+**Bugfixes**
+
+- Fixed bug where parameters had no effect in `get_product_historic_rates`.
+- Fixed bug where `product_id` parameter had no effect in `cancel_all`.
+
 0.0.5 (2018-08-21)
 ++++++++++++++++++
 
