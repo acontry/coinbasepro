@@ -501,7 +501,9 @@ class AuthenticatedClient(PublicClient):
         return self._send_paginated_message('/orders', params=params)
 
     def get_fills(self, product_id=None, order_id=None, **kwargs):
-        """Get a list of recent fills.
+        """Get a list of recent fills for a product or order.
+
+        Either `product_id` or `order_id` must be specified.
 
         This method returns a generator which may make multiple HTTP requests
         while iterating through it.
@@ -543,6 +545,8 @@ class AuthenticatedClient(PublicClient):
                 ]
 
         """
+        if (product_id is None) and (order_id is None):
+            raise ValueError('Either product_id or order_id must be specified.')
         params = {}
         if product_id:
             params['product_id'] = product_id
