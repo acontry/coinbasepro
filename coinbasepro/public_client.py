@@ -146,7 +146,7 @@ class PublicClient(object):
         return self._send_paginated_message('/products/{}/trades'
                                             .format(product_id))
 
-    def get_product_historic_rates(self, product_id, start=None, end=None,
+    def get_product_historic_rates(self, product_id, start=None, stop=None,
                                    granularity=None):
         """Historic rates for a product.
 
@@ -186,8 +186,8 @@ class PublicClient(object):
         params = {}
         if start is not None:
             params['start'] = start
-        if end is not None:
-            params['end'] = end
+        if stop is not None:
+            params['stop'] = stop
         if granularity is not None:
             params['granularity'] = granularity
         return self._send_message('get',
