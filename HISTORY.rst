@@ -8,6 +8,13 @@ dev
 
 - [Short description of non-trivial change.]
 
+0.0.7 (2018-09-09)
+++++++++++++++++++
+
+**Bugfixes**
+
+- Fix parameter name for `get_product_historic_rates`.
+
 0.0.6 (2018-08-23)
 ++++++++++++++++++
 
