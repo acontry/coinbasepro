@@ -152,7 +152,8 @@ class PublicClient(object):
 
         Rates are returned in grouped buckets based on requested
         `granularity`. If start, end, and granularity aren't provided,
-        the exchange will provide the latest 300 ticks with 60s granularity (one minute).
+        the exchange will provide the latest 300 ticks with 60s granularity
+        (one minute).
 
         Historical rate data may be incomplete. No data is published for
         intervals where there are no ticks.
@@ -171,7 +172,7 @@ class PublicClient(object):
         Args:
             product_id (str): Product
             start (Optional[str]): Start time in ISO 8601
-            end (Optional[str]): End time in ISO 8601
+            stop (Optional[str]): End time in ISO 8601
             granularity (Optional[str]): Desired time slice in seconds
 
         Returns:
