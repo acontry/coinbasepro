@@ -4,7 +4,6 @@ import hmac
 import json
 import time
 
-import requests
 from requests.auth import AuthBase
 
 from coinbasepro import PublicClient
@@ -76,7 +75,6 @@ class AuthenticatedClient(PublicClient):
                     }
                 ]
 
-        * Additional info included in response for margin accounts.
         """
         return self.get_account('')
 
@@ -397,10 +395,9 @@ class AuthenticatedClient(PublicClient):
         """
         if product_id is not None:
             params = {'product_id': product_id}
-            data = json.dumps(params)
         else:
-            data = None
-        return self._send_message('delete', '/orders', data=data)
+            params = None
+        return self._send_message('delete', '/orders', params=params)
 
     def get_order(self, order_id):
         """Get a single order by order id.
@@ -503,7 +500,9 @@ class AuthenticatedClient(PublicClient):
         return self._send_paginated_message('/orders', params=params)
 
     def get_fills(self, product_id=None, order_id=None, **kwargs):
-        """Get a list of recent fills.
+        """Get a list of recent fills for a product or order.
+
+        Either `product_id` or `order_id` must be specified.
 
         This method returns a generator which may make multiple HTTP requests
         while iterating through it.
@@ -545,6 +544,8 @@ class AuthenticatedClient(PublicClient):
                 ]
 
         """
+        if (product_id is None) and (order_id is None):
+            raise ValueError('Either product_id or order_id must be specified.')
         params = {}
         if product_id:
             params['product_id'] = product_id

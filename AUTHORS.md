@@ -1,5 +1,6 @@
 ## Authors
 * Alex Contryman
+* khoo-j
 
 ## Acknowledgements
 This package was derived from: 

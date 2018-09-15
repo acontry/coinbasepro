@@ -165,13 +165,14 @@ class PublicClient(object):
         for trade in r:
             yield self._convert_dict(trade, field_conversions)
 
-    def get_product_historic_rates(self, product_id, start=None, end=None,
+    def get_product_historic_rates(self, product_id, start=None, stop=None,
                                    granularity=None):
         """Historic rates for a product.
 
         Rates are returned in grouped buckets based on requested
         `granularity`. If start, end, and granularity aren't provided,
-        the exchange will assume some (currently unknown) default values.
+        the exchange will provide the latest 300 ticks with 60s granularity
+        (one minute).
 
         Historical rate data may be incomplete. No data is published for
         intervals where there are no ticks.
@@ -182,9 +183,9 @@ class PublicClient(object):
         If you need real-time information, use the trade and book
         endpoints along with the websocket feed.
 
-        The maximum number of data points for a single request is 200
+        The maximum number of data points for a single request is 300
         candles. If your selection of start/end time and granularity
-        will result in more than 200 data points, your request will be
+        will result in more than 300 data points, your request will be
         rejected. If you wish to retrieve fine granularity data over a
         larger time range, you will need to make multiple requests with
         new start/end ranges.
@@ -192,13 +193,13 @@ class PublicClient(object):
         Args:
             product_id (str): Product
             start (Optional[str]): Start time in ISO 8601
-            end (Optional[str]): End time in ISO 8601
+            stop (Optional[str]): End time in ISO 8601
             granularity (Optional[str]): Desired time slice in seconds
 
         Returns:
             list: Historic candle data. Example::
                 [
-                    [ time, low, high, open, close, volume ],
+                    [ epoch time, low, high, open, close, volume ],
                     [ 1415398768, 0.32, 4.2, 0.35, 4.2, 12.3 ],
                     ...
                 ]
@@ -217,10 +218,11 @@ class PublicClient(object):
         params = {}
         if start is not None:
             params['start'] = start
-        if end is not None:
-            params['end'] = end
+        if stop is not None:
+            params['stop'] = stop
         if granularity is not None:
             params['granularity'] = granularity
+
         candles = self._send_message('get', '/products/{}/candles'
                                      .format(product_id))
         return [convert_candle(c) for c in candles]

@@ -14,7 +14,7 @@ Features
 --------
 - Full support of Coinbase Pro REST API
 - Pythonic abstractions for a clean interface
-
+- Exceptions to enable easy handling of Coinbase error responses
 
 Installation
 ------------
