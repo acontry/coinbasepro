@@ -4,3 +4,5 @@ venv/
 build/
 dist
 coinbasepro.egg-info/
+
+__pycache__/
