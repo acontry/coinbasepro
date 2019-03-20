@@ -178,10 +178,10 @@ class PublicClient(object):
                              'trade_id': int,
                              'price': Decimal,
                              'size': Decimal}
-        r = self._send_paginated_message('/products/{}/trades'
-                                         .format(product_id))
-        for trade in r:
-            yield self._convert_dict(trade, field_conversions)
+        trades = self._send_paginated_message('/products/{}/trades'
+                                              .format(product_id))
+        return (self._convert_dict(trade, field_conversions)
+                for trade in trades)
 
     def get_product_historic_rates(self, product_id, start=None, stop=None,
                                    granularity=None):
@@ -422,12 +422,16 @@ class PublicClient(object):
 
     @staticmethod
     def parse_datetime(dt):
-        return datetime.strptime(dt, '%Y-%m-%dT%H:%M:%S.%fZ')
+        try:
+            return datetime.strptime(dt, '%Y-%m-%dT%H:%M:%S.%fZ')
+        except ValueError:
+            return datetime.strptime(dt, '%Y-%m-%dT%H:%M:%SZ')
 
     @staticmethod
     def _convert_dict(r, field_conversions):
         for field, converter in field_conversions.items():
-            r[field] = converter(r[field])
+            if field in r:
+                r[field] = converter(r[field])
         return r
 
     @staticmethod

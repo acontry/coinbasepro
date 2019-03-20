@@ -1,9 +1,10 @@
+import time
+
 import base64
 import hashlib
 import hmac
 import json
-import time
-
+from decimal import Decimal
 from requests.auth import AuthBase
 
 from coinbasepro import PublicClient
@@ -44,13 +45,21 @@ class AuthenticatedClient(PublicClient):
                 {
                     'id': '29a4fc2b',
                     'currency': 'USD',
-                    'balance': '1000000.0000000000000000',
-                    'available': '1000000.0000000000000000',
-                    'hold': '0.0000000000000000',
+                    'balance': Decimal('1000000.0000000000000000'),
+                    'available': Decimal('1000000.0000000000000000'),
+                    'hold': Decimal('0.0000000000000000'),
                     'profile_id': 'f24b313b',
                 }
         """
-        return self._send_message('get', '/accounts/' + account_id)
+        field_conversions = {'balance': Decimal,
+                             'available': Decimal,
+                             'hold': Decimal}
+        r = self._send_message('get', '/accounts/' + account_id)
+        # Need to handle empty string `account_id`, which returns all acounts
+        if type(r) is list:
+            return self._convert_list_of_dicts(r, field_conversions)
+        else:
+            return self._convert_dict(r, field_conversions)
 
     def get_accounts(self):
         """Gets a list of trading all accounts.
@@ -66,9 +75,9 @@ class AuthenticatedClient(PublicClient):
                     {
                         'id': '71452118-efc7-4cc4-8780-a5e22d4baa53',
                         'currency': 'BTC',
-                        'balance': '0.0000000000000000',
-                        'available': '0.0000000000000000',
-                        'hold': '0.0000000000000000',
+                        'balance': Decimal('0.0000000000000000'),
+                        'available': Decimal('0.0000000000000000'),
+                        'hold': Decimal('0.0000000000000000'),
                         'profile_id': '75da88c5-05bf-4f54-bc85-5c775bd68254'
                     },
                     {
@@ -104,10 +113,10 @@ class AuthenticatedClient(PublicClient):
             History information for the account. Example::
                 [
                     {
-                        'id': '100',
-                        'created_at': '2014-11-07T08:19:27.028459Z',
-                        'amount': '0.001',
-                        'balance': '239.669',
+                        'id': 100,
+                        'created_at': datetime(2019, 3, 19, 22, 26, 22, 520000),
+                        'amount': Decimal('0.001'),
+                        'balance': Decimal('239.669'),
                         'type': 'fee',
                         'details': {
                             'order_id': 'd50ec984-77a8-460a-b958-66f114b0de9b',
@@ -120,8 +129,13 @@ class AuthenticatedClient(PublicClient):
                     }
                 ]
         """
+        field_conversions = {'created_at': self.parse_datetime,
+                             'amount': Decimal,
+                             'balance': Decimal}
         endpoint = '/accounts/{}/ledger'.format(account_id)
-        return self._send_paginated_message(endpoint, params=kwargs)
+        r = self._send_paginated_message(endpoint, params=kwargs)
+        return (self._convert_dict(activity, field_conversions)
+                for activity in r)
 
     def get_account_holds(self, account_id, **kwargs):
         """Gets holds on an account.
@@ -150,9 +164,9 @@ class AuthenticatedClient(PublicClient):
                     {
                         'id': '82dcd140-c3c7-4507-8de4-2c529cd1a28f',
                         'account_id': 'e0b3f39a-183d-453e-b754-0c13e5bab0b3',
-                        'created_at': '2014-11-06T10:34:47.123456Z',
-                        'updated_at': '2014-11-06T10:40:47.123456Z',
-                        'amount': '4.23',
+                        'created_at': datetime(2019, 3, 19, 22, 26, 22, 520000),
+                        'updated_at': datetime(2019, 3, 19, 22, 26, 24, 520000),
+                        'amount': Decimal('4.23'),
                         'type': 'order',
                         'ref': '0a205de4-dd35-4370-a285-fe8fc375a273',
                     },
@@ -162,8 +176,12 @@ class AuthenticatedClient(PublicClient):
                 ]
 
         """
+        field_conversions = {'created_at': self.parse_datetime,
+                             'updated_at': self.parse_datetime,
+                             'amount': Decimal}
         endpoint = '/accounts/{}/holds'.format(account_id)
-        return self._send_paginated_message(endpoint, params=kwargs)
+        r = self._send_paginated_message(endpoint, params=kwargs)
+        return (self._convert_dict(hold, field_conversions) for hold in r)
 
     def place_order(self,
                     product_id,
@@ -211,18 +229,18 @@ class AuthenticatedClient(PublicClient):
             dict: Order details. Example::
             {
                 'id': 'd0c5340b-6d6c-49d9-b567-48c4bfca13d2',
-                'price': '0.10000000',
-                'size': '0.01000000',
+                'price': Decimal('0.10000000'),
+                'size': Decimal('0.01000000'),
                 'product_id': 'BTC-USD',
                 'side': 'buy',
                 'stp': 'dc',
                 'type': 'limit',
                 'time_in_force': 'GTC',
                 'post_only': false,
-                'created_at': '2016-12-08T20:02:28.53864Z',
-                'fill_fees': '0.0000000000000000',
-                'filled_size': '0.00000000',
-                'executed_value': '0.0000000000000000',
+                'created_at': datetime(2019, 3, 19, 22, 26, 22, 520000),
+                'fill_fees': Decimal('0.0000000000000000'),
+                'filled_size': Decimal('0.00000000'),
+                'executed_value': Decimal('0.0000000000000000'),
                 'status': 'pending',
                 'settled': False
             }
@@ -259,7 +277,15 @@ class AuthenticatedClient(PublicClient):
                   'client_oid': client_oid,
                   'stp': stp}
         params.update(kwargs)
-        return self._send_message('post', '/orders', data=json.dumps(params))
+
+        field_conversions = {'price': Decimal,
+                             'size': Decimal,
+                             'created_at': self.parse_datetime,
+                             'fill_fees': Decimal,
+                             'filled_size': Decimal,
+                             'executed_value': Decimal}
+        r = self._send_message('post', '/orders', data=json.dumps(params))
+        return self._convert_dict(r, field_conversions)
 
     def place_limit_order(self,
                           product_id,
@@ -382,7 +408,7 @@ class AuthenticatedClient(PublicClient):
         with get_order(order_id). If the order could not be canceled
         (already filled or previously canceled, etc), then an
         exception will be raised with the reason indicated in the
-        message field.
+        message.
 
         **Caution**: The order id is the server-assigned order id and
         not the optional client_oid.
@@ -437,17 +463,17 @@ class AuthenticatedClient(PublicClient):
         Returns:
             dict: Containing information on order. Example::
                 {
-                    'created_at': '2017-06-18T00:27:42.920136Z',
-                    'executed_value': '0.0000000000000000',
-                    'fill_fees': '0.0000000000000000',
-                    'filled_size': '0.00000000',
+                    'created_at': datetime(2019, 3, 19, 22, 26, 22, 520000),
+                    'executed_value': Decimal('0.0000000000000000'),
+                    'fill_fees': Decimal('0.0000000000000000'),
+                    'filled_size': Decimal('0.00000000'),
                     'id': '9456f388-67a9-4316-bad1-330c5353804f',
                     'post_only': True,
-                    'price': '1.00000000',
+                    'price': Decimal('1.00000000'),
                     'product_id': 'BTC-USD',
                     'settled': False,
                     'side': 'buy',
-                    'size': '1.00000000',
+                    'size': Decimal('1.00000000'),
                     'status': 'pending',
                     'stp': 'dc',
                     'time_in_force': 'GTC',
@@ -455,7 +481,14 @@ class AuthenticatedClient(PublicClient):
                 }
 
         """
-        return self._send_message('get', '/orders/' + order_id)
+        field_conversions = {'created_at': self.parse_datetime,
+                             'executed_value': Decimal,
+                             'fill_fees': Decimal,
+                             'filled_size': Decimal,
+                             'price': Decimal,
+                             'size': Decimal}
+        r = self._send_message('get', '/orders/' + order_id)
+        return self._convert_dict(r, field_conversions)
 
     def get_orders(self, product_id=None, status=None, **kwargs):
         """Lists your current open orders.
@@ -491,18 +524,18 @@ class AuthenticatedClient(PublicClient):
                 [
                     {
                         'id': 'd0c5340b-6d6c-49d9-b567-48c4bfca13d2',
-                        'price': '0.10000000',
-                        'size': '0.01000000',
+                        'price': Decimal('0.10000000'),
+                        'size': Decimal('0.01000000'),
                         'product_id': 'BTC-USD',
                         'side': 'buy',
                         'stp': 'dc',
                         'type': 'limit',
                         'time_in_force': 'GTC',
                         'post_only': False,
-                        'created_at': '2016-12-08T20:02:28.53864Z',
-                        'fill_fees': '0.0000000000000000',
-                        'filled_size': '0.00000000',
-                        'executed_value': '0.0000000000000000',
+                        'created_at': datetime(2019, 3, 19, 22, 26, 22, 520000),
+                        'fill_fees': Decimal('0.0000000000000000'),
+                        'filled_size': Decimal('0.00000000'),
+                        'executed_value': Decimal('0.0000000000000000'),
                         'status': 'open',
                         'settled': False
                     },
@@ -517,7 +550,16 @@ class AuthenticatedClient(PublicClient):
             params['product_id'] = product_id
         if status is not None:
             params['status'] = status
-        return self._send_paginated_message('/orders', params=params)
+
+        field_conversions = {'price': Decimal,
+                             'size': Decimal,
+                             'created_at': self.parse_datetime,
+                             'fill_fees': Decimal,
+                             'filled_size': Decimal,
+                             'executed_value': Decimal}
+        orders = self._send_paginated_message('/orders', params=params)
+        return (self._convert_dict(order, field_conversions)
+                for order in orders)
 
     def get_fills(self, product_id=None, order_id=None, **kwargs):
         """Gets recent fills for a product or order.
@@ -570,7 +612,13 @@ class AuthenticatedClient(PublicClient):
             params['order_id'] = order_id
         params.update(kwargs)
 
-        return self._send_paginated_message('/fills', params=params)
+        field_conversions = {'price': Decimal,
+                             'size': Decimal,
+                             'created_at': self.parse_datetime,
+                             'fee': Decimal}
+        # TODO: handle usd_volume key. I assume there are more...
+        fills = self._send_paginated_message('/fills', params=params)
+        return (self._convert_dict(fill, field_conversions) for fill in fills)
 
     def deposit(self, amount, currency, payment_method_id):
         """Deposits funds from a payment method.
@@ -596,8 +644,11 @@ class AuthenticatedClient(PublicClient):
         params = {'amount': amount,
                   'currency': currency,
                   'payment_method_id': payment_method_id}
-        return self._send_message('post', '/deposits/payment-method',
-                                  data=json.dumps(params))
+        field_conversions = {'amount': Decimal,
+                             'payout_at': self.parse_datetime}
+        r = self._send_message('post', '/deposits/payment-method',
+                               data=json.dumps(params))
+        return self._convert_dict(r, field_conversions)
 
     def deposit_from_coinbase(self, amount, currency, coinbase_account_id):
         """Deposits funds from a Coinbase account.
@@ -626,8 +677,9 @@ class AuthenticatedClient(PublicClient):
         params = {'amount': amount,
                   'currency': currency,
                   'coinbase_account_id': coinbase_account_id}
-        return self._send_message('post', '/deposits/coinbase-account',
-                                  data=json.dumps(params))
+        r = self._send_message('post', '/deposits/coinbase-account',
+                               data=json.dumps(params))
+        return self._convert_dict(r, {'amount': Decimal})
 
     def withdraw(self, amount, currency, payment_method_id):
         """Withdraws funds to a payment method.
@@ -653,8 +705,11 @@ class AuthenticatedClient(PublicClient):
         params = {'amount': amount,
                   'currency': currency,
                   'payment_method_id': payment_method_id}
-        return self._send_message('post', '/withdrawals/payment-method',
-                                  data=json.dumps(params))
+        field_conversions = {'amount': Decimal,
+                             'payout_at': self.parse_datetime}
+        r = self._send_message('post', '/withdrawals/payment-method',
+                               data=json.dumps(params))
+        return self._convert_dict(r, field_conversions)
 
     def withdraw_to_coinbase(self, amount, currency, coinbase_account_id):
         """Withdraws funds to a coinbase account.
@@ -683,8 +738,9 @@ class AuthenticatedClient(PublicClient):
         params = {'amount': amount,
                   'currency': currency,
                   'coinbase_account_id': coinbase_account_id}
-        return self._send_message('post', '/withdrawals/coinbase',
-                                  data=json.dumps(params))
+        r = self._send_message('post', '/withdrawals/coinbase',
+                               data=json.dumps(params))
+        return self._convert_dict(r, {'amount': Decimal})
 
     def withdraw_to_crypto(self, amount, currency, crypto_address):
         """Withdraws funds to a crypto address.
@@ -706,8 +762,9 @@ class AuthenticatedClient(PublicClient):
         params = {'amount': amount,
                   'currency': currency,
                   'crypto_address': crypto_address}
-        return self._send_message('post', '/withdrawals/crypto',
-                                  data=json.dumps(params))
+        r = self._send_message('post', '/withdrawals/crypto',
+                               data=json.dumps(params))
+        return self._convert_dict(r, {'amount': Decimal})
 
     def get_payment_methods(self):
         """Gets a list of your payment methods.
@@ -716,7 +773,10 @@ class AuthenticatedClient(PublicClient):
             list: Payment method details.
 
         """
-        return self._send_message('get', '/payment-methods')
+        field_conversions = {'created_at': self.parse_datetime,
+                             'updated_at': self.parse_datetime}
+        r = self._send_message('get', '/payment-methods')
+        return self._convert_list_of_dicts(r, field_conversions)
 
     def get_coinbase_accounts(self):
         """Gets a list of your coinbase accounts.
@@ -725,7 +785,10 @@ class AuthenticatedClient(PublicClient):
             list: Coinbase account details.
 
         """
-        return self._send_message('get', '/coinbase-accounts')
+        field_conversions = {'balance': Decimal,
+                             'hold_balance': Decimal}
+        r = self._send_message('get', '/coinbase-accounts')
+        return self._convert_list_of_dicts(r, field_conversions)
 
     def create_report(self, report_type, start_date, end_date, product_id=None,
                       account_id=None, report_format='pdf', email=None):
@@ -812,7 +875,11 @@ class AuthenticatedClient(PublicClient):
                 ]
 
         """
-        return self._send_message('get', '/users/self/trailing-volume')
+        field_conversions = {'exchange_volume': Decimal,
+                             'volume': Decimal,
+                             'recorded_at': self.parse_datetime}
+        r = self._send_message('get', '/users/self/trailing-volume')
+        return self._convert_dict(field_conversions, r)
 
 
 class CoinbaseProAuth(AuthBase):
