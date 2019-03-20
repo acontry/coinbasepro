@@ -144,7 +144,7 @@ class PublicClient(object):
                              'bid': Decimal,
                              'ask': Decimal,
                              'volume': Decimal,
-                             'time': self.parse_datetime}
+                             'time': self._parse_datetime}
         r = self._send_message('get', '/products/{}/ticker'.format(product_id))
         return self._convert_dict(r, field_conversions)
 
@@ -174,7 +174,7 @@ class PublicClient(object):
                 }]
 
         """
-        field_conversions = {'time': self.parse_datetime,
+        field_conversions = {'time': self._parse_datetime,
                              'trade_id': int,
                              'price': Decimal,
                              'size': Decimal}
@@ -329,7 +329,7 @@ class PublicClient(object):
                     }
 
         """
-        field_conversions = {'iso': self.parse_datetime}
+        field_conversions = {'iso': self._parse_datetime}
         times = self._send_message('get', '/time')
         return self._convert_dict(times, field_conversions)
 
@@ -421,7 +421,7 @@ class PublicClient(object):
                 params['after'] = r.headers['cb-after']
 
     @staticmethod
-    def parse_datetime(dt):
+    def _parse_datetime(dt):
         try:
             return datetime.strptime(dt, '%Y-%m-%dT%H:%M:%S.%fZ')
         except ValueError:

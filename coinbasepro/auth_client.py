@@ -129,7 +129,7 @@ class AuthenticatedClient(PublicClient):
                     }
                 ]
         """
-        field_conversions = {'created_at': self.parse_datetime,
+        field_conversions = {'created_at': self._parse_datetime,
                              'amount': Decimal,
                              'balance': Decimal}
         endpoint = '/accounts/{}/ledger'.format(account_id)
@@ -176,8 +176,8 @@ class AuthenticatedClient(PublicClient):
                 ]
 
         """
-        field_conversions = {'created_at': self.parse_datetime,
-                             'updated_at': self.parse_datetime,
+        field_conversions = {'created_at': self._parse_datetime,
+                             'updated_at': self._parse_datetime,
                              'amount': Decimal}
         endpoint = '/accounts/{}/holds'.format(account_id)
         r = self._send_paginated_message(endpoint, params=kwargs)
@@ -280,7 +280,7 @@ class AuthenticatedClient(PublicClient):
 
         field_conversions = {'price': Decimal,
                              'size': Decimal,
-                             'created_at': self.parse_datetime,
+                             'created_at': self._parse_datetime,
                              'fill_fees': Decimal,
                              'filled_size': Decimal,
                              'executed_value': Decimal}
@@ -481,7 +481,7 @@ class AuthenticatedClient(PublicClient):
                 }
 
         """
-        field_conversions = {'created_at': self.parse_datetime,
+        field_conversions = {'created_at': self._parse_datetime,
                              'executed_value': Decimal,
                              'fill_fees': Decimal,
                              'filled_size': Decimal,
@@ -553,7 +553,7 @@ class AuthenticatedClient(PublicClient):
 
         field_conversions = {'price': Decimal,
                              'size': Decimal,
-                             'created_at': self.parse_datetime,
+                             'created_at': self._parse_datetime,
                              'fill_fees': Decimal,
                              'filled_size': Decimal,
                              'executed_value': Decimal}
@@ -614,7 +614,7 @@ class AuthenticatedClient(PublicClient):
 
         field_conversions = {'price': Decimal,
                              'size': Decimal,
-                             'created_at': self.parse_datetime,
+                             'created_at': self._parse_datetime,
                              'fee': Decimal}
         # TODO: handle usd_volume key. I assume there are more...
         fills = self._send_paginated_message('/fills', params=params)
@@ -645,7 +645,7 @@ class AuthenticatedClient(PublicClient):
                   'currency': currency,
                   'payment_method_id': payment_method_id}
         field_conversions = {'amount': Decimal,
-                             'payout_at': self.parse_datetime}
+                             'payout_at': self._parse_datetime}
         r = self._send_message('post', '/deposits/payment-method',
                                data=json.dumps(params))
         return self._convert_dict(r, field_conversions)
@@ -706,7 +706,7 @@ class AuthenticatedClient(PublicClient):
                   'currency': currency,
                   'payment_method_id': payment_method_id}
         field_conversions = {'amount': Decimal,
-                             'payout_at': self.parse_datetime}
+                             'payout_at': self._parse_datetime}
         r = self._send_message('post', '/withdrawals/payment-method',
                                data=json.dumps(params))
         return self._convert_dict(r, field_conversions)
@@ -773,8 +773,8 @@ class AuthenticatedClient(PublicClient):
             list: Payment method details.
 
         """
-        field_conversions = {'created_at': self.parse_datetime,
-                             'updated_at': self.parse_datetime}
+        field_conversions = {'created_at': self._parse_datetime,
+                             'updated_at': self._parse_datetime}
         r = self._send_message('get', '/payment-methods')
         return self._convert_list_of_dicts(r, field_conversions)
 
@@ -877,7 +877,7 @@ class AuthenticatedClient(PublicClient):
         """
         field_conversions = {'exchange_volume': Decimal,
                              'volume': Decimal,
-                             'recorded_at': self.parse_datetime}
+                             'recorded_at': self._parse_datetime}
         r = self._send_message('get', '/users/self/trailing-volume')
         return self._convert_dict(field_conversions, r)
 
