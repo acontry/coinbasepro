@@ -1,6 +1,7 @@
 import requests
 from datetime import datetime
 from decimal import Decimal
+from typing import Any, Dict, Generator, List, Optional, Union
 
 from coinbasepro.exceptions import (CoinbaseAPIError, BadRequest, InvalidAPIKey,
                                     InvalidAuthorization, RateLimitError)
@@ -20,13 +21,13 @@ class PublicClient(object):
     """
 
     def __init__(self,
-                 api_url='https://api.pro.coinbase.com',
-                 request_timeout=30):
+                 api_url: str = 'https://api.pro.coinbase.com',
+                 request_timeout: int = 30):
         """Creates a Coinbase Pro API public client instance.
 
         Args:
-            api_url (Optional[str]): API URL. Defaults to Coinbase Pro API.
-            request_timeout (Optional[int]): Request timeout (in seconds).
+            api_url: API URL. Defaults to Coinbase Pro API.
+            request_timeout: Request timeout (in seconds).
 
         """
         self.url = api_url.rstrip('/')
@@ -34,7 +35,7 @@ class PublicClient(object):
         self.session = requests.Session()
         self.request_timeout = request_timeout
 
-    def get_products(self):
+    def get_products(self) -> List[Dict[str, Any]]:
         """Gets a list of available currency pairs for trading.
 
         The `base_min_size` and `base_max_size` fields define the min
@@ -46,7 +47,7 @@ class PublicClient(object):
         rejected).
 
         Returns:
-            list: Info about all currency pairs. Example::
+            Info about all currency pairs. Example::
                 [
                     {
                         'id': 'BTC-USD',
@@ -88,7 +89,7 @@ class PublicClient(object):
         r = self._send_message('get', '/products')
         return self._convert_list_of_dicts(r, field_conversions)
 
-    def get_product_order_book(self, product_id, level=1):
+    def get_product_order_book(self, product_id: str, level: int = 1) -> Dict:
         """Gets a list of open orders for a product.
 
         The amount of detail shown can be customized with the `level`
@@ -106,12 +107,11 @@ class PublicClient(object):
         be limited or blocked.
 
         Args:
-            product_id (str): Product
-            level (Optional[int]): Order book level (1, 2, or 3).
-                Default is 1.
+            product_id: Product.
+            level: Order book level (1, 2, or 3). Default is 1.
 
         Returns:
-            dict: Order book. Example for level 1::
+            Order book. Example for level 1::
                 {
                     'sequence': '3',
                     'bids': [
@@ -131,17 +131,17 @@ class PublicClient(object):
                                   '/products/{}/book'.format(product_id),
                                   params=params)
 
-    def get_product_ticker(self, product_id):
+    def get_product_ticker(self, product_id: str) -> Dict[str, Any]:
         """Snapshot about the last trade (tick), best bid/ask and 24h volume.
 
         **Caution**: Polling is discouraged in favor of connecting via
         the websocket stream and listening for match messages.
 
         Args:
-            product_id (str): Product
+            product_id: Product.
 
         Returns:
-            dict: Ticker info. Example::
+            Ticker info. Example::
                 {
                   'trade_id': 4729088,
                   'price': Decimal('333.99'),
@@ -166,14 +166,14 @@ class PublicClient(object):
         r = self._send_message('get', '/products/{}/ticker'.format(product_id))
         return self._convert_dict(r, field_conversions)
 
-    def get_product_trades(self, product_id):
+    def get_product_trades(self, product_id: str) -> Generator[Dict[str, Any]]:
         """Lists the latest trades for a product.
 
         This method returns a generator which may make multiple HTTP
         requests while iterating through it.
 
         Args:
-            product_id (str): Product
+            product_id: Product.
 
         Yields:
             Latest trades. Example::
@@ -204,8 +204,12 @@ class PublicClient(object):
         return (self._convert_dict(trade, field_conversions)
                 for trade in trades)
 
-    def get_product_historic_rates(self, product_id, start=None, stop=None,
-                                   granularity=None):
+    def get_product_historic_rates(self,
+                                   product_id: str,
+                                   start: Optional[str] = None,
+                                   stop: Optional[str] = None,
+                                   granularity: Optional[str] = None
+                                   ) -> List[Dict[str, Any]]:
         """Gets historic rates for a product.
 
         Rates are returned in grouped buckets based on requested
@@ -228,13 +232,13 @@ class PublicClient(object):
         new start/end ranges.
 
         Args:
-            product_id (str): Product
-            start (Optional[str]): Start time in ISO 8601
-            stop (Optional[str]): End time in ISO 8601
-            granularity (Optional[str]): Desired time slice in seconds
+            product_id: Product.
+            start: Start time in ISO 8601.
+            stop: End time in ISO 8601.
+            granularity: Desired time slice in seconds.
 
         Returns:
-            list: Historic candle data. Example::
+            Historic candle data. Example::
                 [{
                     'time': datetime(2019, 3, 19, 22, 26, 22, 520000),
                     'low': Decimal('0.32'),
@@ -272,14 +276,14 @@ class PublicClient(object):
                                      .format(product_id))
         return [convert_candle(c) for c in candles]
 
-    def get_product_24hr_stats(self, product_id):
+    def get_product_24hr_stats(self, product_id: str) -> Dict[str, Any]:
         """Gets 24 hr stats for the product.
 
         Args:
-            product_id (str): Product
+            product_id: Product.
 
         Returns:
-            dict: 24 hour stats. Volume is in base currency units.
+            24 hour stats. Volume is in base currency units.
                 Open, high, low are in quote currency units. Example::
                     {
                         'open': Decimal('3961.34000000'),
@@ -304,11 +308,11 @@ class PublicClient(object):
                                    .format(product_id))
         return self._convert_dict(stats, field_conversions)
 
-    def get_currencies(self):
+    def get_currencies(self) -> List[Dict[str, Any]]:
         """Lists known currencies.
 
         Returns:
-            list: List of currencies. Example::
+            List of currencies. Example::
                 [{
                     'id': 'BTC',
                     'name': 'Bitcoin',
@@ -347,12 +351,12 @@ class PublicClient(object):
         currencies = self._send_message('get', '/currencies')
         return self._convert_list_of_dicts(currencies, field_conversions)
 
-    def get_time(self):
+    def get_time(self) -> Dict[str, Any]:
         """Gets the API server time.
 
         Returns:
-            dict: Server time in ISO and epoch format (decimal seconds
-                since Unix epoch). Example::
+            Server time in ISO and epoch format (decimal seconds since
+            Unix epoch). Example::
                     {
                         'iso': datetime(2019, 3, 19, 22, 26, 22, 520000),
                         'epoch': 1420674445.201
@@ -382,17 +386,21 @@ class PublicClient(object):
             else:
                 raise CoinbaseAPIError(message)
 
-    def _send_message(self, method, endpoint, params=None, data=None):
+    def _send_message(self,
+                      method: str,
+                      endpoint: str,
+                      params: Optional[Dict] = None,
+                      data: Optional[str] = None) -> Union[List, Dict]:
         """Sends API request.
 
         Args:
-            method (str): HTTP method (get, post, delete, etc.)
-            endpoint (str): Endpoint (to be added to base URL)
-            params (Optional[dict]): HTTP request parameters
-            data (Optional[str]): JSON-encoded string payload for POST
+            method: HTTP method (get, post, delete, etc.)
+            endpoint: Endpoint (to be added to base URL)
+            params: HTTP request parameters
+            data: JSON-encoded string payload for POST
 
         Returns:
-            dict/list: JSON response
+            JSON response
 
         Raises:
             See `get_products()`.
@@ -408,7 +416,10 @@ class PublicClient(object):
         self._check_errors_and_raise(r)
         return r.json(parse_float=Decimal)
 
-    def _send_paginated_message(self, endpoint, params=None):
+    def _send_paginated_message(self,
+                                endpoint: str,
+                                params: Optional[Dict] = None
+                                ) -> Generator[Dict]:
         """Sends API message that results in a paginated response.
 
         The paginated responses are abstracted away by making API
@@ -427,11 +438,11 @@ class PublicClient(object):
             maximum) of 100.
 
         Args:
-            endpoint (str): Endpoint (to be added to base URL)
-            params (Optional[dict]): HTTP request parameters
+            endpoint: Endpoint (to be added to base URL)
+            params: HTTP request parameters
 
         Yields:
-            dict: API response objects
+            API response objects
 
         Raises:
             See `get_products()`.
