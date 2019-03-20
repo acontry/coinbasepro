@@ -157,8 +157,8 @@ class PublicClient(object):
         Args:
             product_id (str): Product
 
-        Returns:
-            list: Latest trades. Example::
+        Yields:
+            Latest trades. Example::
                 [{
                     'time': datetime(2019, 3, 19, 22, 26, 27, 570000),
                     'trade_id': 74,
