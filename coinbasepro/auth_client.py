@@ -623,12 +623,12 @@ class AuthenticatedClient(PublicClient):
                     {
                         'trade_id': 74,
                         'product_id': 'BTC-USD',
-                        'price': '10.00',
-                        'size': '0.01',
+                        'price': Decimal('10.00'),
+                        'size': Decimal('0.01'),
                         'order_id': 'd50ec984-77a8-460a-b958-66f114b0de9b',
-                        'created_at': '2014-11-07T22:19:28.578544Z',
+                        'created_at': datetime(2019, 3, 19, 22, 26, 22, 520000),
                         'liquidity': 'T',
-                        'fee': '0.00025',
+                        'fee': Decimal('0.00025'),
                         'settled': True,
                         'side': 'buy'
                     },
@@ -673,9 +673,9 @@ class AuthenticatedClient(PublicClient):
             dict: Information about the deposit. Example::
                 {
                     'id': '593533d2-ff31-46e0-b22e-ca754147a96a',
-                    'amount': '10.00',
+                    'amount': Decimal('10.00'),
                     'currency': 'USD',
-                    'payout_at': '2016-08-20T00:31:09Z'
+                    'payout_at': datetime(2019, 3, 19, 22, 26, 22)
                 }
 
         Raises:
@@ -710,7 +710,7 @@ class AuthenticatedClient(PublicClient):
             dict: Information about the deposit. Example::
                 {
                     'id': '593533d2-ff31-46e0-b22e-ca754147a96a',
-                    'amount': '10.00',
+                    'amount': Decimal('10.00'),
                     'currency: 'BTC',
                 }
 
@@ -740,9 +740,9 @@ class AuthenticatedClient(PublicClient):
             dict: Withdraw details. Example::
                 {
                     'id': '593533d2-ff31-46e0-b22e-ca754147a96a',
-                    'amount': '10.00',
+                    'amount': Decimal('10.00'),
                     'currency': 'USD',
-                    'payout_at': '2016-08-20T00:31:09Z'
+                    'payout_at': datetime(2019, 3, 19, 22, 26, 22)
                 }
 
         Raises:
@@ -777,7 +777,7 @@ class AuthenticatedClient(PublicClient):
             dict: Information about the deposit. Example::
                 {
                     'id': '593533d2-ff31-46e0-b22e-ca754147a96a',
-                    'amount': '10.00',
+                    'amount': Decimal('10.00'),
                     'currency': 'BTC',
                 }
 
@@ -804,7 +804,7 @@ class AuthenticatedClient(PublicClient):
             dict: Withdraw details. Example::
                 {
                     'id': '593533d2-ff31-46e0-b22e-ca754147a96a',
-                    'amount':'10.00',
+                    'amount': Decimal('10.00'),
                     'currency': 'BTC',
                 }
 
@@ -930,9 +930,9 @@ class AuthenticatedClient(PublicClient):
                 [
                     {
                         'product_id': 'BTC-USD',
-                        'exchange_volume': '11800.00000000',
-                        'volume': '100.00000000',
-                        'recorded_at': '1973-11-29T00:05:01.123456Z'
+                        'exchange_volume': Decimal('11800.00000000'),
+                        'volume': Decimal('100.00000000'),
+                        'recorded_at': datetime(2019, 3, 19, 22, 26, 22, 520000)
                     },
                     {
                         ...
