@@ -22,7 +22,7 @@ class PublicClient(object):
     def __init__(self,
                  api_url='https://api.pro.coinbase.com',
                  request_timeout=30):
-        """Create a Coinbase Pro API public client instance.
+        """Creates a Coinbase Pro API public client instance.
 
         Args:
             api_url (Optional[str]): API URL. Defaults to Coinbase Pro API.
@@ -30,24 +30,42 @@ class PublicClient(object):
 
         """
         self.url = api_url.rstrip('/')
-        self.auth = None
+        self.auth = None  # No auth needed for public client
         self.session = requests.Session()
         self.request_timeout = request_timeout
 
     def get_products(self):
-        """Get a list of available currency pairs for trading.
+        """Gets a list of available currency pairs for trading.
+
+        The `base_min_size` and `base_max_size` fields define the min
+        and max order size. The `quote_increment` field specifies the
+        min order price as well as the price increment.
+
+        The order price must be a multiple of this increment (i.e. if
+        the increment is 0.01, order prices of 0.001 or 0.021 would be
+        rejected).
 
         Returns:
             list: Info about all currency pairs. Example::
                 [
                     {
-                        "id": "BTC-USD",
-                        "display_name": "BTC/USD",
-                        "base_currency": "BTC",
-                        "quote_currency": "USD",
-                        "base_min_size": "0.01",
-                        "base_max_size": "10000.00",
-                        "quote_increment": "0.01"
+                        'id': 'BTC-USD',
+                        'display_name': 'BTC/USD',
+                        'base_currency': 'BTC',
+                        'quote_currency': 'USD',
+                        'base_min_size': Decimal('0.001'),
+                        'base_max_size': Decimal('70'),
+                        'quote_increment': Decimal('0.01'),
+                        'display_name': 'BTC/USD',
+                        'status': 'online',
+                        'margin_enabled': False,
+                        'status_message': None,
+                        'min_market_funds': 10,
+                        'max_market_funds': 1000000,
+                        'post_only': False,
+                        'limit_only': False
+                    }, {
+                    ...
                     }
                 ]
 
@@ -59,7 +77,7 @@ class PublicClient(object):
         return self._convert_list_of_dicts(r, field_conversions)
 
     def get_product_order_book(self, product_id, level=1):
-        """Get a list of open orders for a product.
+        """Gets a list of open orders for a product.
 
         The amount of detail shown can be customized with the `level`
         parameter:
@@ -83,12 +101,12 @@ class PublicClient(object):
         Returns:
             dict: Order book. Example for level 1::
                 {
-                    "sequence": "3",
-                    "bids": [
-                        [ price, size, num-orders ],
+                    'sequence': '3',
+                    'bids': [
+                        [price, size, num-orders],
                     ],
-                    "asks": [
-                        [ price, size, num-orders ],
+                    'asks': [
+                        [price, size, num-orders],
                     ]
                 }
 
@@ -110,13 +128,13 @@ class PublicClient(object):
         Returns:
             dict: Ticker info. Example::
                 {
-                  "trade_id": 4729088,
-                  "price": "333.99",
-                  "size": "0.193",
-                  "bid": "333.98",
-                  "ask": "333.99",
-                  "volume": "5957.11914015",
-                  "time": "2015-11-14T20:46:03.511254Z"
+                  'trade_id': 4729088,
+                  'price': Decimal('333.99'),
+                  'size': Decimal('0.193'),
+                  'bid': Decimal('333.98'),
+                  'ask': Decimal('333.99'),
+                  'volume': Decimal('5957.11914015'),
+                  'time': datetime(2019, 3, 19, 22, 26, 27, 570000)
                 }
 
         """
@@ -131,10 +149,10 @@ class PublicClient(object):
         return self._convert_dict(r, field_conversions)
 
     def get_product_trades(self, product_id):
-        """List the latest trades for a product.
+        """Lists the latest trades for a product.
 
-        This method returns a generator which may make multiple HTTP requests
-        while iterating through it.
+        This method returns a generator which may make multiple HTTP
+        requests while iterating through it.
 
         Args:
             product_id (str): Product
@@ -142,17 +160,17 @@ class PublicClient(object):
         Returns:
             list: Latest trades. Example::
                 [{
-                    "time": "2014-11-07T22:19:28.578544Z",
-                    "trade_id": 74,
-                    "price": "10.00000000",
-                    "size": "0.01000000",
-                    "side": "buy"
+                    'time': datetime(2019, 3, 19, 22, 26, 27, 570000),
+                    'trade_id': 74,
+                    'price': Decimal('10.00000000'),
+                    'size': Decimal('0.01000000'),
+                    'side': 'buy'
                 }, {
-                    "time": "2014-11-07T01:08:43.642366Z",
-                    "trade_id": 73,
-                    "price": "100.00000000",
-                    "size": "0.01000000",
-                    "side": "sell"
+                    'time': datetime(2019, 3, 19, 22, 26, 22, 520000),
+                    'trade_id': 73,
+                    'price': Decimal('100.00000000'),
+                    'size': Decimal('0.01000000'),
+                    'side': 'sell'
                 }]
 
         """
@@ -167,17 +185,15 @@ class PublicClient(object):
 
     def get_product_historic_rates(self, product_id, start=None, stop=None,
                                    granularity=None):
-        """Historic rates for a product.
+        """Gets historic rates for a product.
 
         Rates are returned in grouped buckets based on requested
         `granularity`. If start, end, and granularity aren't provided,
-        the exchange will provide the latest 300 ticks with 60s granularity
-        (one minute).
+        the exchange will provide the latest 300 ticks with 60s
+        granularity (one minute).
 
-        Historical rate data may be incomplete. No data is published for
-        intervals where there are no ticks.
-
-        TODO: Convert to generator
+        Historical rate data may be incomplete. No data is published
+        for intervals where there are no ticks.
 
         **Caution**: Historical rates should not be polled frequently.
         If you need real-time information, use the trade and book
@@ -198,9 +214,14 @@ class PublicClient(object):
 
         Returns:
             list: Historic candle data. Example::
-                [
-                    [ epoch time, low, high, open, close, volume ],
-                    [ 1415398768, 0.32, 4.2, 0.35, 4.2, 12.3 ],
+                [{
+                    'time': datetime(2019, 3, 19, 22, 26, 22, 520000),
+                    'low': Decimal('0.32'),
+                    'high': Decimal('4.2'),
+                    'open': Decimal('0.35'),
+                    'close': Decimal('4.2'),
+                    'volume': Decimal('12.3')
+                },
                     ...
                 ]
 
@@ -228,7 +249,7 @@ class PublicClient(object):
         return [convert_candle(c) for c in candles]
 
     def get_product_24hr_stats(self, product_id):
-        """Get 24 hr stats for the product.
+        """Gets 24 hr stats for the product.
 
         Args:
             product_id (str): Product
@@ -237,10 +258,12 @@ class PublicClient(object):
             dict: 24 hour stats. Volume is in base currency units.
                 Open, high, low are in quote currency units. Example::
                     {
-                        "open": "34.19000000",
-                        "high": "95.70000000",
-                        "low": "7.06000000",
-                        "volume": "2.41000000"
+                        'open': Decimal('3961.34000000'),
+                        'high': Decimal('4017.49000000'),
+                        'low': Decimal('3954.63000000'),
+                        'volume': Decimal('6249.19597605'),
+                        'last': Decimal('3980.52000000'),
+                        'volume_30day': Decimal('238421.35846878')
                     }
 
         """
@@ -255,18 +278,38 @@ class PublicClient(object):
         return self._convert_dict(stats, field_conversions)
 
     def get_currencies(self):
-        """List known currencies.
+        """Lists known currencies.
 
         Returns:
             list: List of currencies. Example::
                 [{
-                    "id": "BTC",
-                    "name": "Bitcoin",
-                    "min_size": "0.00000001"
+                    'id': 'BTC',
+                    'name': 'Bitcoin',
+                    'min_size': Decimal('0.00000001'),
+                    'status': 'online',
+                    'message': None,
+                    'details': {
+                        'type': 'crypto',
+                        'symbol': '\u20bf',
+                        'network_confirmations': 6,
+                        'sort_order': 3,
+                        'crypto_address_link': 'https://live.blockcypher.com/btc/address/{{address}}',
+                        'crypto_transaction_link': 'https://live.blockcypher.com/btc/tx/{{txId}}',
+                        'push_payment_methods': ['crypto']
+                    }
+
                 }, {
-                    "id": "USD",
-                    "name": "United States Dollar",
-                    "min_size": "0.01000000"
+                    'id': 'EUR',
+                    'name': 'Euro',
+                    'min_size': Decimal('0.01000000'),
+                    'status': 'online',
+                    'message': None,
+                    'details': {
+                        'type': 'fiat',
+                        'symbol': '€',
+                        'sort_order': 1,
+                        'push_payment_methods': ['sepa_bank_account']
+                    }
                 }]
 
         """
@@ -275,14 +318,14 @@ class PublicClient(object):
         return self._convert_list_of_dicts(currencies, field_conversions)
 
     def get_time(self):
-        """Get the API server time.
+        """Gets the API server time.
 
         Returns:
             dict: Server time in ISO and epoch format (decimal seconds
                 since Unix epoch). Example::
                     {
-                        "iso": "2015-01-07T23:47:25.201Z",
-                        "epoch": 1420674445.201
+                        'iso': datetime(2019, 3, 19, 22, 26, 22, 520000),
+                        'epoch': 1420674445.201
                     }
 
         """
@@ -291,7 +334,7 @@ class PublicClient(object):
         return self._convert_dict(times, field_conversions)
 
     @staticmethod
-    def check_errors_and_raise(response):
+    def _check_errors_and_raise(response):
         """Check for error codes and raise an exception if necessary."""
         if 400 <= response.status_code < 600:
             message = response.json()['message']
@@ -306,8 +349,8 @@ class PublicClient(object):
             else:
                 raise CoinbaseAPIError(message)
 
-    def _send_message(self, method, endpoint, params=None, data=None, decimal_fields=None):
-        """Send API request.
+    def _send_message(self, method, endpoint, params=None, data=None):
+        """Sends API request.
 
         Args:
             method (str): HTTP method (get, post, delete, etc.)
@@ -326,23 +369,26 @@ class PublicClient(object):
                                  data=data,
                                  auth=self.auth,
                                  timeout=self.request_timeout)
-        self.check_errors_and_raise(r)
+        self._check_errors_and_raise(r)
         return r.json(parse_float=Decimal)
 
     def _send_paginated_message(self, endpoint, params=None):
-        """ Send API message that results in a paginated response.
+        """Sends API message that results in a paginated response.
 
-        The paginated responses are abstracted away by making API requests on
-        demand as the response is iterated over.
+        The paginated responses are abstracted away by making API
+        requests on demand as the response is iterated over.
 
-        Paginated API messages support 3 additional parameters: `before`,
-        `after`, and `limit`. `before` and `after` are mutually exclusive. To
-        use them, supply an index value for that endpoint (the field used for
-        indexing varies by endpoint - get_fills() uses 'trade_id', for example).
-            `before`: Only get data that occurs more recently than index
-            `after`: Only get data that occurs further in the past than index
-            `limit`: Set amount of data per HTTP response. Default (and
-                maximum) of 100.
+        Paginated API messages support 3 additional parameters:
+        `before`, `after`, and `limit`. `before` and `after` are
+        mutually exclusive. To use them, supply an index value for that
+        endpoint (the field used for indexing varies by endpoint -
+        get_fills() uses 'trade_id', for example).
+
+        `before`: Only get data that occurs more recently than index.
+        `after`: Only get data that occurs further in the past than
+            index.
+        `limit`: Set amount of data per HTTP response. Default (and
+            maximum) of 100.
 
         Args:
             endpoint (str): Endpoint (to be added to base URL)
@@ -360,7 +406,7 @@ class PublicClient(object):
                                  params=params,
                                  auth=self.auth,
                                  timeout=self.request_timeout)
-            self.check_errors_and_raise(r)
+            self._check_errors_and_raise(r)
             results = r.json(parse_float=Decimal)
             for result in results:
                 yield result
@@ -391,4 +437,3 @@ class PublicClient(object):
     @classmethod
     def _convert_list_of_dicts(cls, r, field_conversions):
         return [cls._convert_dict(x, field_conversions) for x in r]
-
