@@ -654,9 +654,16 @@ class AuthenticatedClient(PublicClient):
                              'size': Decimal,
                              'created_at': self._parse_datetime,
                              'fee': Decimal}
-        # TODO: handle usd_volume key. I assume there are more...
+
+        def convert_volume_keys(fill):
+            """Convert any 'volume' keys (like 'usd_volume') to Decimal."""
+            for k, v in fill.items():
+                if 'volume' in k:
+                    fill[k] = Decimal(fill[k])
+            return fill
         fills = self._send_paginated_message('/fills', params=params)
-        return (self._convert_dict(fill, field_conversions) for fill in fills)
+        return (self._convert_dict(convert_volume_keys(fill), field_conversions)
+                for fill in fills)
 
     def deposit(self, amount, currency, payment_method_id):
         """Deposits funds from a payment method.
