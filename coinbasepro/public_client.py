@@ -1,7 +1,7 @@
 import requests
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, Generator, List, Optional, Union
+from typing import Any, Dict, Iterator, List, Optional, Union
 
 from coinbasepro.exceptions import (CoinbaseAPIError, BadRequest, InvalidAPIKey,
                                     InvalidAuthorization, RateLimitError)
@@ -166,7 +166,7 @@ class PublicClient(object):
         r = self._send_message('get', '/products/{}/ticker'.format(product_id))
         return self._convert_dict(r, field_conversions)
 
-    def get_product_trades(self, product_id: str) -> Generator[Dict[str, Any]]:
+    def get_product_trades(self, product_id: str) -> Iterator[Dict[str, Any]]:
         """Lists the latest trades for a product.
 
         This method returns a generator which may make multiple HTTP
@@ -419,7 +419,7 @@ class PublicClient(object):
     def _send_paginated_message(self,
                                 endpoint: str,
                                 params: Optional[Dict] = None
-                                ) -> Generator[Dict]:
+                                ) -> Iterator[Dict]:
         """Sends API message that results in a paginated response.
 
         The paginated responses are abstracted away by making API

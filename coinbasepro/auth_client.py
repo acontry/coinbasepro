@@ -1,6 +1,6 @@
 import json
 from decimal import Decimal
-from typing import Any, Dict, Generator, List, Optional, Union
+from typing import Any, Dict, Iterator, List, Optional, Union
 
 from coinbasepro import PublicClient
 from coinbasepro.auth import CoinbaseProAuth
@@ -87,7 +87,7 @@ class AuthenticatedClient(PublicClient):
         return self._get_account_helper('')
 
     def get_account_history(
-            self, account_id: str, **kwargs) -> Generator[Dict[str, Any]]:
+            self, account_id: str, **kwargs) -> Iterator[Dict[str, Any]]:
         """Lists account activity.
 
         Account activity either increases or decreases your account
@@ -141,7 +141,7 @@ class AuthenticatedClient(PublicClient):
                 for activity in r)
 
     def get_account_holds(
-            self, account_id: str, **kwargs) -> Generator[Dict[str, Any]]:
+            self, account_id: str, **kwargs) -> Iterator[Dict[str, Any]]:
         """Gets holds on an account.
 
         Holds are placed on an account for active orders or
@@ -520,7 +520,7 @@ class AuthenticatedClient(PublicClient):
     def get_orders(self,
                    product_id: Optional[str] = None,
                    status: Optional[Union[str, List[str]]] = None,
-                   **kwargs) -> Generator[Dict[str, Any]]:
+                   **kwargs) -> Iterator[Dict[str, Any]]:
         """Lists your current open orders.
 
         Only open or un-settled orders are returned. As soon as an
@@ -595,7 +595,7 @@ class AuthenticatedClient(PublicClient):
     def get_fills(self,
                   product_id: Optional[str] = None,
                   order_id: Optional[str] = None,
-                  **kwargs) -> Generator[Dict[str, Any]]:
+                  **kwargs) -> Iterator[Dict[str, Any]]:
         """Gets recent fills for a product or order.
 
         Either `product_id` or `order_id` must be specified.
