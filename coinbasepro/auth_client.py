@@ -1,5 +1,6 @@
 import json
 from decimal import Decimal
+from typing import Any, Dict, Generator, List, Optional, Union
 
 from coinbasepro import PublicClient
 from coinbasepro.auth import CoinbaseProAuth
@@ -12,28 +13,31 @@ class AuthenticatedClient(PublicClient):
         api_url (str): The api url for this client instance to use.
         auth (CoinbaseProAuth): Custom authentication handler for each request.
     """
-    def __init__(self, key, secret, passphrase,
-                 api_url='https://api.pro.coinbase.com',
-                 request_timeout=30):
+    def __init__(self,
+                 key: str,
+                 secret: str,
+                 passphrase: str,
+                 api_url: str = 'https://api.pro.coinbase.com',
+                 request_timeout: int = 30):
         """Create an AuthenticatedClient instance.
 
         Args:
-            key (str): Your API key.
-            secret (str): Your API secret.
-            passphrase (str): Your API passphrase.
-            api_url (Optional[str]): API URL. Defaults to Coinbase Pro API.
-            request_timeout (Optional[int]): Request timeout (in seconds).
+            key: Your API key.
+            secret: Your API secret.
+            passphrase: Your API passphrase.
+            api_url: API URL. Defaults to Coinbase Pro API.
+            request_timeout: Request timeout (in seconds).
         """
         super(AuthenticatedClient, self).__init__(api_url, request_timeout)
         self.auth = CoinbaseProAuth(key, secret, passphrase)
 
-    def get_account(self, account_id):
+    def get_account(self, account_id: str) -> Dict[str, Any]:
         """Gets information for a single account.
 
         Use this endpoint when you know the account_id.
 
         Args:
-            account_id (str): Account id for account you want to get.
+            account_id: Account id for account you want to get.
 
         Returns:
             dict: Account information. Example::
@@ -50,17 +54,9 @@ class AuthenticatedClient(PublicClient):
             See `get_products()`.
 
         """
-        field_conversions = {'balance': Decimal,
-                             'available': Decimal,
-                             'hold': Decimal}
-        r = self._send_message('get', '/accounts/' + account_id)
-        # Need to handle empty string `account_id`, which returns all acounts
-        if type(r) is list:
-            return self._convert_list_of_dicts(r, field_conversions)
-        else:
-            return self._convert_dict(r, field_conversions)
+        return self._get_account_helper(account_id)
 
-    def get_accounts(self):
+    def get_accounts(self) -> List[Dict[str, Any]]:
         """Gets a list of trading all accounts.
 
         When you place an order, the funds for the order are placed on
@@ -69,7 +65,7 @@ class AuthenticatedClient(PublicClient):
         funds on hold for each account will be specified.
 
         Returns:
-            list: Info about all accounts. Example::
+            Info about all accounts. Example::
                 [
                     {
                         'id': '71452118-efc7-4cc4-8780-a5e22d4baa53',
@@ -88,9 +84,10 @@ class AuthenticatedClient(PublicClient):
             See `get_products()`.
 
         """
-        return self.get_account('')
+        return self._get_account_helper('')
 
-    def get_account_history(self, account_id, **kwargs):
+    def get_account_history(
+            self, account_id: str, **kwargs) -> Generator[Dict[str, Any]]:
         """Lists account activity.
 
         Account activity either increases or decreases your account
@@ -108,8 +105,8 @@ class AuthenticatedClient(PublicClient):
         field will contain additional information about the trade.
 
         Args:
-            account_id (str): Account id to get history of.
-            kwargs (dict): Additional HTTP request parameters.
+            account_id: Account id to get history of.
+            kwargs: Additional HTTP request parameters.
 
         Yields:
             History information for the account. Example::
@@ -143,7 +140,8 @@ class AuthenticatedClient(PublicClient):
         return (self._convert_dict(activity, field_conversions)
                 for activity in r)
 
-    def get_account_holds(self, account_id, **kwargs):
+    def get_account_holds(
+            self, account_id: str, **kwargs) -> Generator[Dict[str, Any]]:
         """Gets holds on an account.
 
         Holds are placed on an account for active orders or
@@ -161,8 +159,8 @@ class AuthenticatedClient(PublicClient):
         created the hold.
 
         Args:
-            account_id (str): Account id to get holds of.
-            kwargs (dict): Additional HTTP request parameters.
+            account_id: Account id to get holds of.
+            kwargs: Additional HTTP request parameters.
 
         Yields:
             Hold information for the account. Example::
@@ -193,14 +191,14 @@ class AuthenticatedClient(PublicClient):
         return (self._convert_dict(hold, field_conversions) for hold in r)
 
     def place_order(self,
-                    product_id,
-                    side,
-                    order_type,
-                    stop=None,
-                    stop_price=None,
-                    client_oid=None,
-                    stp=None,
-                    **kwargs):
+                    product_id: str,
+                    side: str,
+                    order_type: str,
+                    stop: Optional[str] = None,
+                    stop_price: Optional[Union[float, Decimal]] = None,
+                    client_oid: Optional[str] = None,
+                    stp: Optional[str] = None,
+                    **kwargs) -> Dict[str, Any]:
         """Places an order.
 
         The two order types (limit and market) can be placed using this
@@ -209,23 +207,22 @@ class AuthenticatedClient(PublicClient):
         available.
 
         Args:
-            product_id (str): Product to order (eg. 'BTC-USD').
-            side (str): Order side ('buy' or 'sell').
-            order_type (str): Order type ('limit' or 'market').
-            stop (Optional[str]): Sets the type of stop order. There
-                are two options:
+            product_id: Product to order (eg. 'BTC-USD').
+            side: Order side ('buy' or 'sell').
+            order_type: Order type ('limit' or 'market').
+            stop: Sets the type of stop order. There are two options:
                 'loss': Triggers when the last trade price changes to a
                     value at or below the `stop_price`.
                 'entry: Triggers when the last trade price changes to a
                     value at or above the `stop_price`.
                 `stop_price` must be set when a stop order is specified.
-            stop_price (Optional[Decimal]): Trigger price for stop order.
-            client_oid (str): Order ID selected by you to identify your
+            stop_price: Trigger price for stop order.
+            client_oid: Order ID selected by you to identify your
                 order. This should be a UUID, which will be broadcast
                 in the public feed for `received` messages.
-            stp (str): Self-trade prevention flag. Coinbase Pro doesn't
-                allow self-trading. This behavior can be modified with
-                this flag. Options:
+            stp: Self-trade prevention flag. Coinbase Pro doesn't allow
+                self-trading. This behavior can be modified with this
+                flag. Options:
                 'dc': Decrease and Cancel (default)
                 'co': Cancel oldest
                 'cn': Cancel newest
@@ -235,7 +232,7 @@ class AuthenticatedClient(PublicClient):
                 details.
 
         Returns:
-            dict: Order details. Example::
+            Order details. Example::
             {
                 'id': 'd0c5340b-6d6c-49d9-b567-48c4bfca13d2',
                 'price': Decimal('0.10000000'),
@@ -255,6 +252,7 @@ class AuthenticatedClient(PublicClient):
             }
 
         Raises:
+            ValueError: Incorrect order parameters.
             See `get_products()`.
 
         """
@@ -300,53 +298,52 @@ class AuthenticatedClient(PublicClient):
         return self._convert_dict(r, field_conversions)
 
     def place_limit_order(self,
-                          product_id,
-                          side,
-                          price,
-                          size,
-                          stop=None,
-                          stop_price=None,
-                          client_oid=None,
-                          stp=None,
-                          time_in_force=None,
-                          cancel_after=None,
-                          post_only=None):
+                          product_id: str,
+                          side: str,
+                          price: Union[float, Decimal],
+                          size: Union[float, Decimal],
+                          stop: Optional[str] = None,
+                          stop_price: Optional[Union[float, Decimal]] = None,
+                          client_oid: Optional[str] = None,
+                          stp: Optional[str] = None,
+                          time_in_force: Optional[str] = None,
+                          cancel_after: Optional[str] = None,
+                          post_only: Optional[bool] = None) -> Dict[str, Any]:
         """Places a limit order.
 
         Args:
-            product_id (str): Product to order (eg. 'BTC-USD').
-            side (str): Order side ('buy' or 'sell).
-            price (Decimal): Price per cryptocurrency.
-            size (Decimal): Amount of cryptocurrency to buy or sell.
-            stop (Optional[str]): Sets the type of stop order. There
-                are two options:
+            product_id: Product to order (eg. 'BTC-USD').
+            side: Order side ('buy' or 'sell).
+            price: Price per cryptocurrency.
+            size: Amount of cryptocurrency to buy or sell.
+            stop: Sets the type of stop order. There are two options:
                 'loss': Triggers when the last trade price changes to
                     a value at or below the `stop_price`.
                 'entry: Triggers when the last trade price changes to
                     a value at or above the `stop_price`.
                 `stop_price` must be set when a stop order is
                 specified.
-            stop_price (Optional[Decimal]): Trigger price for stop
-                order.
-            client_oid (Optional[str]): User-specified Order ID.
-            stp (Optional[str]): Self-trade prevention flag. See `
-                place_order` for details.
-            time_in_force (Optional[str]): Time in force. Options:
+            stop_price: Trigger price for stop order.
+            client_oid: User-specified Order ID.
+            stp: Self-trade prevention flag. See `place_order` for
+                details.
+            time_in_force: Time in force. Options:
                 'GTC': Good till canceled
                 'GTT': Good till time (set by `cancel_after`)
                 'IOC': Immediate or cancel
                 'FOK': Fill or kill
-            cancel_after (Optional[str]): Cancel after this period for
-                'GTT' orders. Options are 'min', 'hour', or 'day'.
-            post_only (Optional[bool]): Indicates that the order should
-                only make liquidity. If any part of the order results
-                in taking liquidity, the order will be rejected and no
-                part of it will execute.
+            cancel_after: Cancel after this period for 'GTT' orders.
+                Options are 'min', 'hour', or 'day'.
+            post_only: Indicates that the order should only make
+                liquidity. If any part of the order results in taking
+                liquidity, the order will be rejected and no part of
+                it will execute.
 
         Returns:
-            dict: Order details. See `place_order` for example.
+            Order details. See `place_order` for example.
 
         Raises:
+            ValueError: Incorrect order parameters.
             See `get_products()`.
 
         """
@@ -366,11 +363,15 @@ class AuthenticatedClient(PublicClient):
 
         return self.place_order(**params)
 
-    def place_market_order(self, product_id, side, size=None, funds=None,
-                           stop=None,
-                           stop_price=None,
-                           client_oid=None,
-                           stp=None):
+    def place_market_order(self,
+                           product_id: str,
+                           side: str,
+                           size: Union[float, Decimal] = None,
+                           funds: Union[float, Decimal] = None,
+                           stop: Optional[str] = None,
+                           stop_price: Optional[Union[float, Decimal]] = None,
+                           client_oid: Optional[str] = None,
+                           stp: Optional[str] = None) -> Dict[str, Any]:
         """Places a market order.
 
         `size` and `funds` parameters specify the order amount. `funds`
@@ -378,13 +379,13 @@ class AuthenticatedClient(PublicClient):
         used and `size` will limit the crypto amount transacted.
 
         Args:
-            product_id (str): Product to order (eg. 'BTC-USD').
-            side (str): Order side ('buy' or 'sell).
-            size (Optional[Decimal]): Desired amount in crypto. Specify
+            product_id: Product to order (eg. 'BTC-USD').
+            side: Order side ('buy' or 'sell).
+            size: Desired amount in crypto. Specify
                 this and/or `funds`.
-            funds (Optional[Decimal]): Desired amount of quote currency
+            funds: Desired amount of quote currency
                 to use. Specify this and/or `size`.
-            stop (Optional[str]): Sets the type of stop order. There are
+            stop: Sets the type of stop order. There are
                 two options:
                 'loss': Triggers when the last trade price changes to a
                     value at or below the `stop_price`.
@@ -392,16 +393,16 @@ class AuthenticatedClient(PublicClient):
                     value at or above the `stop_price`.
                 `stop_price` must be set when a stop order is
                 specified.
-            stop_price (Optional[Decimal]): Trigger price for stop
-                order.
-            client_oid (Optional[str]): User-specified Order ID.
-            stp (Optional[str]): Self-trade prevention flag. See
-                `place_order` for details.
+            stop_price: Trigger price for stop order.
+            client_oid: User-specified Order ID.
+            stp: Self-trade prevention flag. See `place_order` for
+                details.
 
         Returns:
-            dict: Order details. See `place_order` for example.
+            Order details. See `place_order` for example.
 
         Raises:
+            ValueError: Incorrect order parameters.
             See `get_products()`.
 
         """
@@ -418,7 +419,7 @@ class AuthenticatedClient(PublicClient):
 
         return self.place_order(**params)
 
-    def cancel_order(self, order_id):
+    def cancel_order(self, order_id: str) -> List[str]:
         """Cancels a previously placed order.
 
         If the order had no matches during its lifetime its record may
@@ -436,7 +437,7 @@ class AuthenticatedClient(PublicClient):
                 cancel.
 
         Returns:
-            list: Containing the order_id of cancelled order. Example::
+            List containing the order_id of cancelled order. Example::
                 ['c5ab5eae-76be-480e-8961-00792dc7e138']
 
         Raises:
@@ -445,15 +446,14 @@ class AuthenticatedClient(PublicClient):
         """
         return self._send_message('delete', '/orders/' + order_id)
 
-    def cancel_all(self, product_id=None):
+    def cancel_all(self, product_id: Optional[str] = None) -> List[str]:
         """With best effort, cancels all open orders.
 
         Args:
-            product_id (Optional[str]): Only cancel orders for this
-                product_id
+            product_id: Only cancel orders for this product_id.
 
         Returns:
-            list: A list of ids of the canceled orders. Example::
+            A list of ids of the canceled orders. Example::
                 [
                     '144c6f8e-713f-4682-8435-5280fbe8b2b4',
                     'debe4907-95dc-442f-af3b-cec12f42ebda',
@@ -472,7 +472,7 @@ class AuthenticatedClient(PublicClient):
             params = None
         return self._send_message('delete', '/orders', params=params)
 
-    def get_order(self, order_id):
+    def get_order(self, order_id: str) -> Dict[str, Any]:
         """Gets a single order by order id.
 
         If the order is canceled the response may have status code 404
@@ -482,10 +482,10 @@ class AuthenticatedClient(PublicClient):
         and the response depending on market conditions.
 
         Args:
-            order_id (str): The order to get information of.
+            order_id: The order to get information of.
 
         Returns:
-            dict: Containing information on order. Example::
+            Information on order. Example::
                 {
                     'created_at': datetime(2019, 3, 19, 22, 26, 22, 520000),
                     'executed_value': Decimal('0.0000000000000000'),
@@ -517,7 +517,10 @@ class AuthenticatedClient(PublicClient):
         r = self._send_message('get', '/orders/' + order_id)
         return self._convert_dict(r, field_conversions)
 
-    def get_orders(self, product_id=None, status=None, **kwargs):
+    def get_orders(self,
+                   product_id: Optional[str] = None,
+                   status: Optional[Union[str, List[str]]] = None,
+                   **kwargs) -> Generator[Dict[str, Any]]:
         """Lists your current open orders.
 
         Only open or un-settled orders are returned. As soon as an
@@ -537,11 +540,9 @@ class AuthenticatedClient(PublicClient):
         the current state of any open orders.
 
         Args:
-            product_id (Optional[str]): Only list orders for this
-                product
-            status (Optional[list/str]): Limit list of orders to
-                this status or statuses. Passing 'all' returns orders
-                of all statuses.
+            product_id: Only list orders for this product.
+            status: Limit list of orders to this status or statuses.
+                Passing 'all' returns orders of all statuses.
                 ** Options: 'open', 'pending', 'active', 'done',
                     'settled'
                 ** default: ['open', 'pending', 'active']
@@ -591,7 +592,10 @@ class AuthenticatedClient(PublicClient):
         return (self._convert_dict(order, field_conversions)
                 for order in orders)
 
-    def get_fills(self, product_id=None, order_id=None, **kwargs):
+    def get_fills(self,
+                  product_id: Optional[str] = None,
+                  order_id: Optional[str] = None,
+                  **kwargs) -> Generator[Dict[str, Any]]:
         """Gets recent fills for a product or order.
 
         Either `product_id` or `order_id` must be specified.
@@ -608,9 +612,9 @@ class AuthenticatedClient(PublicClient):
         indicates Taker.
 
         Args:
-            product_id (Optional[str]): Limit list to this product_id
-            order_id (Optional[str]): Limit list to this order_id
-            kwargs (dict): Additional HTTP request parameters.
+            product_id: Limit list to this product_id.
+            order_id: Limit list to this order_id.
+            kwargs: Additional HTTP request parameters.
 
         Yields:
             Information on fills. Example::
@@ -633,6 +637,7 @@ class AuthenticatedClient(PublicClient):
                 ]
 
         Raises:
+            ValueError: If at least one filter param isn't specified.
             See `get_products()`.
 
         """
@@ -660,19 +665,22 @@ class AuthenticatedClient(PublicClient):
         return (self._convert_dict(convert_volume_keys(fill), field_conversions)
                 for fill in fills)
 
-    def deposit(self, amount, currency, payment_method_id):
+    def deposit(self,
+                amount: Union[float, Decimal],
+                currency: str,
+                payment_method_id: str) -> Dict[str, Any]:
         """Deposits funds from a payment method.
 
         See AuthenticatedClient.get_payment_methods() to receive
         information regarding payment methods.
 
         Args:
-            amount (Decimal): The amount to deposit.
-            currency (str): The type of currency.
-            payment_method_id (str): ID of the payment method.
+            amount: The amount to deposit.
+            currency: The type of currency.
+            payment_method_id: ID of the payment method.
 
         Returns:
-            dict: Information about the deposit. Example::
+            Information about the deposit. Example::
                 {
                     'id': '593533d2-ff31-46e0-b22e-ca754147a96a',
                     'amount': Decimal('10.00'),
@@ -693,7 +701,10 @@ class AuthenticatedClient(PublicClient):
                                data=json.dumps(params))
         return self._convert_dict(r, field_conversions)
 
-    def deposit_from_coinbase(self, amount, currency, coinbase_account_id):
+    def deposit_from_coinbase(self,
+                              amount: Union[float, Decimal],
+                              currency: str,
+                              coinbase_account_id: str) -> Dict[str, Any]:
         """Deposits funds from a Coinbase account.
 
         You can move funds between your Coinbase accounts and your
@@ -704,12 +715,12 @@ class AuthenticatedClient(PublicClient):
         information regarding your coinbase_accounts.
 
         Args:
-            amount (Decimal): The amount to deposit.
-            currency (str): The type of currency.
-            coinbase_account_id (str): ID of the coinbase account.
+            amount: The amount to deposit.
+            currency: The type of currency.
+            coinbase_account_id: ID of the coinbase account.
 
         Returns:
-            dict: Information about the deposit. Example::
+            Information about the deposit. Example::
                 {
                     'id': '593533d2-ff31-46e0-b22e-ca754147a96a',
                     'amount': Decimal('10.00'),
@@ -727,19 +738,22 @@ class AuthenticatedClient(PublicClient):
                                data=json.dumps(params))
         return self._convert_dict(r, {'amount': Decimal})
 
-    def withdraw(self, amount, currency, payment_method_id):
+    def withdraw(self,
+                 amount: Union[float, Decimal],
+                 currency: str,
+                 payment_method_id: str) -> Dict[str, Any]:
         """Withdraws funds to a payment method.
 
         See AuthenticatedClient.get_payment_methods() to receive
         information regarding payment methods.
 
         Args:
-            amount (Decimal): The amount to withdraw.
-            currency (str): Currency type (eg. 'BTC')
-            payment_method_id (str): ID of the payment method.
+            amount: The amount to withdraw.
+            currency: Currency type (eg. 'BTC').
+            payment_method_id: ID of the payment method.
 
         Returns:
-            dict: Withdraw details. Example::
+            Withdraw details. Example::
                 {
                     'id': '593533d2-ff31-46e0-b22e-ca754147a96a',
                     'amount': Decimal('10.00'),
@@ -760,7 +774,10 @@ class AuthenticatedClient(PublicClient):
                                data=json.dumps(params))
         return self._convert_dict(r, field_conversions)
 
-    def withdraw_to_coinbase(self, amount, currency, coinbase_account_id):
+    def withdraw_to_coinbase(self,
+                             amount: Union[float, Decimal],
+                             currency: str,
+                             coinbase_account_id: str) -> Dict[str, Any]:
         """Withdraws funds to a coinbase account.
 
         You can move funds between your Coinbase accounts and your
@@ -771,12 +788,12 @@ class AuthenticatedClient(PublicClient):
         information regarding your coinbase_accounts.
 
         Args:
-            amount (Decimal): The amount to withdraw.
-            currency (str): The type of currency (eg. 'BTC')
-            coinbase_account_id (str): ID of the coinbase account.
+            amount: The amount to withdraw.
+            currency: The type of currency (eg. 'BTC').
+            coinbase_account_id: ID of the coinbase account.
 
         Returns:
-            dict: Information about the deposit. Example::
+            Information about the deposit. Example::
                 {
                     'id': '593533d2-ff31-46e0-b22e-ca754147a96a',
                     'amount': Decimal('10.00'),
@@ -794,16 +811,19 @@ class AuthenticatedClient(PublicClient):
                                data=json.dumps(params))
         return self._convert_dict(r, {'amount': Decimal})
 
-    def withdraw_to_crypto(self, amount, currency, crypto_address):
+    def withdraw_to_crypto(self,
+                           amount: Union[float, Decimal],
+                           currency: str,
+                           crypto_address: str):
         """Withdraws funds to a crypto address.
 
         Args:
-            amount (Decimal): The amount to withdraw
-            currency (str): The type of currency (eg. 'BTC')
-            crypto_address (str): Crypto address to withdraw to.
+            amount: The amount to withdraw.
+            currency: The type of currency (eg. 'BTC').
+            crypto_address: Crypto address to withdraw to.
 
         Returns:
-            dict: Withdraw details. Example::
+            Withdraw details. Example::
                 {
                     'id': '593533d2-ff31-46e0-b22e-ca754147a96a',
                     'amount': Decimal('10.00'),
@@ -821,11 +841,11 @@ class AuthenticatedClient(PublicClient):
                                data=json.dumps(params))
         return self._convert_dict(r, {'amount': Decimal})
 
-    def get_payment_methods(self):
+    def get_payment_methods(self) -> List[Dict[str, Any]]:
         """Gets a list of your payment methods.
 
         Returns:
-            list: Payment method details.
+            Payment method details.
 
         Raises:
             See `get_products()`.
@@ -836,11 +856,11 @@ class AuthenticatedClient(PublicClient):
         r = self._send_message('get', '/payment-methods')
         return self._convert_list_of_dicts(r, field_conversions)
 
-    def get_coinbase_accounts(self):
+    def get_coinbase_accounts(self) -> List[Dict[str, Any]]:
         """Gets a list of your coinbase accounts.
 
         Returns:
-            list: Coinbase account details.
+            Coinbase account details.
 
         Raises:
             See `get_products()`.
@@ -851,28 +871,32 @@ class AuthenticatedClient(PublicClient):
         r = self._send_message('get', '/coinbase-accounts')
         return self._convert_list_of_dicts(r, field_conversions)
 
-    def create_report(self, report_type, start_date, end_date, product_id=None,
-                      account_id=None, report_format='pdf', email=None):
+    def create_report(self,
+                      report_type: str,
+                      start_date: str,
+                      end_date: str,
+                      product_id: Optional[str] = None,
+                      account_id: Optional[str] = None,
+                      report_format: str = 'pdf',
+                      email: Optional[str] = None) -> Dict[str, Any]:
         """Creates report of historic information about your account.
 
         The report will be generated when resources are available.
         Report status can be queried via `get_report(report_id)`.
 
         Args:
-            report_type (str): 'fills' or 'account'
-            start_date (str): Starting date for the report in ISO 8601
-            end_date (str): Ending date for the report in ISO 8601
-            product_id (Optional[str]): ID of the product to generate a
-                fills report for. Required if account_type is 'fills'.
-            account_id (Optional[str]): ID of the account to generate
-                an account report for. Required if report_type is
-                'account'.
-            report_format (Optional[str]): 'pdf' or 'csv'. Default is
-                'pdf'.
-            email (Optional[str]): Email address to send the report to.
+            report_type: 'fills' or 'account'
+            start_date: Starting date for the report in ISO 8601
+            end_date: Ending date for the report in ISO 8601
+            product_id: ID of the product to generate a fills report
+                for. Required if account_type is 'fills'.
+            account_id: ID of the account to generate an account report
+                for. Required if report_type is 'account'.
+            report_format: 'pdf' or 'csv'. Default is 'pdf'.
+            email: Email address to send the report to.
 
         Returns:
-            dict: Report details. Example::
+            Report details. Example::
                 {
                     'id': '0428b97b-bec1-429e-a94c-59232926778d',
                     'type': 'fills',
@@ -905,16 +929,16 @@ class AuthenticatedClient(PublicClient):
         return self._send_message('post', '/reports',
                                   data=json.dumps(params))
 
-    def get_report(self, report_id):
+    def get_report(self, report_id: str) -> Dict[str, Any]:
         """Gets report status.
 
         Use to query a specific report once it has been requested.
 
         Args:
-            report_id (str): Report ID
+            report_id: Report ID
 
         Returns:
-            dict: Report details, including file url once it is created.
+            Report details, including file url once it is created.
 
         Raises:
             See `get_products()`.
@@ -922,13 +946,13 @@ class AuthenticatedClient(PublicClient):
         """
         return self._send_message('get', '/reports/' + report_id)
 
-    def get_trailing_volume(self):
+    def get_trailing_volume(self) -> List[Dict[str, Any]]:
         """Gets your 30-day trailing volume for all products.
 
         This is a cached value that's calculated every day at midnight UTC.
 
         Returns:
-            list: 30-day trailing volumes. Example::
+            30-day trailing volumes. Example::
                 [
                     {
                         'product_id': 'BTC-USD',
@@ -950,3 +974,14 @@ class AuthenticatedClient(PublicClient):
                              'recorded_at': self._parse_datetime}
         r = self._send_message('get', '/users/self/trailing-volume')
         return self._convert_dict(field_conversions, r)
+
+    def _get_account_helper(self, account_id):
+        field_conversions = {'balance': Decimal,
+                             'available': Decimal,
+                             'hold': Decimal}
+        r = self._send_message('get', '/accounts/' + account_id)
+        # Need to handle empty string `account_id`, which returns all accounts
+        if type(r) is list:
+            return self._convert_list_of_dicts(r, field_conversions)
+        else:
+            return self._convert_dict(r, field_conversions)
