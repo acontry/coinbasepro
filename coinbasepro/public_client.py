@@ -69,6 +69,18 @@ class PublicClient(object):
                     }
                 ]
 
+        Raises:
+            coinbasepro.exceptions.BadRequest: Invalid API format
+                 or parameters.
+            coinbasepro.exceptions.InvalidAPIKey: Invalid API key.
+            coinbasepro.exceptions.InvalidAuthorization: API key does
+                not have sufficient authorization for action.
+            coinbasepro.exceptions.RateLimitError: The API rate limit
+                was exceeded.
+            coinbasepro.exceptions.CoinbaseAPIError: Ambiguous Coinbase
+                Pro error not covered by specific exceptions above.
+                Additionally, parent of all above exceptions.
+
         """
         field_conversions = {'base_min_size': Decimal,
                              'base_max_size': Decimal,
@@ -110,6 +122,9 @@ class PublicClient(object):
                     ]
                 }
 
+        Raises:
+            See `get_products()`.
+
         """
         params = {'level': level}
         return self._send_message('get',
@@ -136,6 +151,9 @@ class PublicClient(object):
                   'volume': Decimal('5957.11914015'),
                   'time': datetime(2019, 3, 19, 22, 26, 27, 570000)
                 }
+
+        Raises:
+            See `get_products()`.
 
         """
         field_conversions = {'trade_id': int,
@@ -172,6 +190,9 @@ class PublicClient(object):
                     'size': Decimal('0.01000000'),
                     'side': 'sell'
                 }]
+
+        Raises:
+            See `get_products()`.
 
         """
         field_conversions = {'time': self._parse_datetime,
@@ -225,6 +246,9 @@ class PublicClient(object):
                     ...
                 ]
 
+        Raises:
+            See `get_products()`.
+
         """
         def convert_candle(c):
             out = dict()
@@ -265,6 +289,9 @@ class PublicClient(object):
                         'last': Decimal('3980.52000000'),
                         'volume_30day': Decimal('238421.35846878')
                     }
+
+        Raises:
+            See `get_products()`.
 
         """
         field_conversions = {'open': Decimal,
@@ -312,6 +339,9 @@ class PublicClient(object):
                     }
                 }]
 
+        Raises:
+            See `get_products()`.
+
         """
         field_conversions = {'min_size': Decimal}
         currencies = self._send_message('get', '/currencies')
@@ -327,6 +357,9 @@ class PublicClient(object):
                         'iso': datetime(2019, 3, 19, 22, 26, 22, 520000),
                         'epoch': 1420674445.201
                     }
+
+        Raises:
+            See `get_products()`.
 
         """
         field_conversions = {'iso': self._parse_datetime}
@@ -360,6 +393,9 @@ class PublicClient(object):
 
         Returns:
             dict/list: JSON response
+
+        Raises:
+            See `get_products()`.
 
         """
         url = self.url + endpoint
@@ -396,6 +432,9 @@ class PublicClient(object):
 
         Yields:
             dict: API response objects
+
+        Raises:
+            See `get_products()`.
 
         """
         if params is None:

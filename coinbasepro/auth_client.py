@@ -50,6 +50,10 @@ class AuthenticatedClient(PublicClient):
                     'hold': Decimal('0.0000000000000000'),
                     'profile_id': 'f24b313b',
                 }
+
+        Raises:
+            See `get_products()`.
+
         """
         field_conversions = {'balance': Decimal,
                              'available': Decimal,
@@ -84,6 +88,9 @@ class AuthenticatedClient(PublicClient):
                         ...
                     }
                 ]
+
+        Raises:
+            See `get_products()`.
 
         """
         return self.get_account('')
@@ -128,6 +135,10 @@ class AuthenticatedClient(PublicClient):
                         ...
                     }
                 ]
+
+        Raises:
+            See `get_products()`.
+
         """
         field_conversions = {'created_at': self._parse_datetime,
                              'amount': Decimal,
@@ -174,6 +185,9 @@ class AuthenticatedClient(PublicClient):
                     ...
                     }
                 ]
+
+        Raises:
+            See `get_products()`.
 
         """
         field_conversions = {'created_at': self._parse_datetime,
@@ -244,6 +258,9 @@ class AuthenticatedClient(PublicClient):
                 'status': 'pending',
                 'settled': False
             }
+
+        Raises:
+            See `get_products()`.
 
         """
         # Market order checks
@@ -334,6 +351,9 @@ class AuthenticatedClient(PublicClient):
         Returns:
             dict: Order details. See `place_order` for example.
 
+        Raises:
+            See `get_products()`.
+
         """
         params = {'product_id': product_id,
                   'side': side,
@@ -386,6 +406,9 @@ class AuthenticatedClient(PublicClient):
         Returns:
             dict: Order details. See `place_order` for example.
 
+        Raises:
+            See `get_products()`.
+
         """
         params = {'product_id': product_id,
                   'side': side,
@@ -421,6 +444,9 @@ class AuthenticatedClient(PublicClient):
             list: Containing the order_id of cancelled order. Example::
                 ['c5ab5eae-76be-480e-8961-00792dc7e138']
 
+        Raises:
+            See `get_products()`.
+
         """
         return self._send_message('delete', '/orders/' + order_id)
 
@@ -440,6 +466,9 @@ class AuthenticatedClient(PublicClient):
                     'dfc5ae27-cadb-4c0c-beef-8994936fde8a',
                     '34fecfbf-de33-4273-b2c6-baf8e8948be4'
                 ]
+
+        Raises:
+            See `get_products()`.
 
         """
         if product_id is not None:
@@ -479,6 +508,9 @@ class AuthenticatedClient(PublicClient):
                     'time_in_force': 'GTC',
                     'type': 'limit'
                 }
+
+        Raises:
+            See `get_products()`.
 
         """
         field_conversions = {'created_at': self._parse_datetime,
@@ -544,6 +576,9 @@ class AuthenticatedClient(PublicClient):
                     }
                 ]
 
+        Raises:
+            See `get_products()`.
+
         """
         params = kwargs
         if product_id is not None:
@@ -602,6 +637,9 @@ class AuthenticatedClient(PublicClient):
                     }
                 ]
 
+        Raises:
+            See `get_products()`.
+
         """
         if (product_id is None) and (order_id is None):
             raise ValueError('Either product_id or order_id must be specified.')
@@ -640,6 +678,9 @@ class AuthenticatedClient(PublicClient):
                     'payout_at': '2016-08-20T00:31:09Z'
                 }
 
+        Raises:
+            See `get_products()`.
+
         """
         params = {'amount': amount,
                   'currency': currency,
@@ -673,6 +714,9 @@ class AuthenticatedClient(PublicClient):
                     'currency: 'BTC',
                 }
 
+        Raises:
+            See `get_products()`.
+
         """
         params = {'amount': amount,
                   'currency': currency,
@@ -700,6 +744,9 @@ class AuthenticatedClient(PublicClient):
                     'currency': 'USD',
                     'payout_at': '2016-08-20T00:31:09Z'
                 }
+
+        Raises:
+            See `get_products()`.
 
         """
         params = {'amount': amount,
@@ -734,6 +781,9 @@ class AuthenticatedClient(PublicClient):
                     'currency': 'BTC',
                 }
 
+        Raises:
+            See `get_products()`.
+
         """
         params = {'amount': amount,
                   'currency': currency,
@@ -758,6 +808,9 @@ class AuthenticatedClient(PublicClient):
                     'currency': 'BTC',
                 }
 
+        Raises:
+            See `get_products()`.
+
         """
         params = {'amount': amount,
                   'currency': currency,
@@ -772,6 +825,9 @@ class AuthenticatedClient(PublicClient):
         Returns:
             list: Payment method details.
 
+        Raises:
+            See `get_products()`.
+
         """
         field_conversions = {'created_at': self._parse_datetime,
                              'updated_at': self._parse_datetime}
@@ -783,6 +839,9 @@ class AuthenticatedClient(PublicClient):
 
         Returns:
             list: Coinbase account details.
+
+        Raises:
+            See `get_products()`.
 
         """
         field_conversions = {'balance': Decimal,
@@ -826,6 +885,9 @@ class AuthenticatedClient(PublicClient):
                     }
                 }
 
+        Raises:
+            See `get_products()`.
+
         """
         params = {'type': report_type,
                   'start_date': start_date,
@@ -852,6 +914,9 @@ class AuthenticatedClient(PublicClient):
         Returns:
             dict: Report details, including file url once it is created.
 
+        Raises:
+            See `get_products()`.
+
         """
         return self._send_message('get', '/reports/' + report_id)
 
@@ -873,6 +938,9 @@ class AuthenticatedClient(PublicClient):
                         ...
                     }
                 ]
+
+        Raises:
+            See `get_products()`.
 
         """
         field_conversions = {'exchange_volume': Decimal,
