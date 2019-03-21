@@ -38,6 +38,7 @@ Features
         # get_product_trades is a generator
         >>> client.get_product_trades('BTC-USD')
         <generator object PublicClient.get_product_trades.<locals>.<genexpr> at 0x1098d6f68>
+
         # Get 2 most recent trades. For many trade requests (>100), multiple
         # HTTP requests will be made under the hood.
         >>> list(itertools.islice(client.get_product_trades('BTC-USD'), 2))
@@ -103,6 +104,7 @@ Features
     # This call throws a BadRequest exception
     >>> auth_client.get_order('invalid_order_num')
     coinbasepro.exceptions.BadRequest: Invalid order id
+    
     # CoinbaseAPIError is the parent exception for all exceptions the API
     # throws, so catching this will catch anything
     >>> try:
