@@ -8,6 +8,20 @@ dev
 
 - [Short description of non-trivial change.]
 
+0.1.0 (2019-03-20)
+++++++++++++++++++
+
+**Improvements**
+
+- Return values are now Pythonic types (i.e Decimal, datetime) instead of all string types.
+- Python3 typing now used to help with development using this API.
+- Docstring improvements and changes to match updated interface.
+- A bit more documentation in the readme.
+
+**Bugfixes**
+
+- Update requests version to >=2.20.0 to address security vulnerability.
+
 0.0.7 (2018-09-09)
 ++++++++++++++++++
 
