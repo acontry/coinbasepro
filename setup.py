@@ -8,7 +8,7 @@ with open('HISTORY.rst', 'r') as f:
 
 
 requires = [
-    'requests>=2.14.0'
+    'requests>=2.20.0'
 ]
 
 setuptools.setup(
