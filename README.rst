@@ -98,6 +98,20 @@ Features
     >>> auth_client.withdraw_to_coinbase(0.01, 'BTC', 'fake_acct_id')
     coinbasepro.exceptions.InvalidAuthorization: Forbidden
 
+.. code-block:: python
+
+    # This call throws a BadRequest exception
+    >>> auth_client.get_order('invalid_order_num')
+    coinbasepro.exceptions.BadRequest: Invalid order id
+    # CoinbaseAPIError is the parent exception for all exceptions the API
+    # throws, so catching this will catch anything
+    >>> try:
+    >>>     auth_client.get_order('invalid_order_num')
+    >>> except cbp.exceptions.CoinbaseAPIError as e:
+    >>>     print('Caught error: {}'.format(e))
+    Caught error: Invalid order id
+
+
 Installation
 ------------
 
