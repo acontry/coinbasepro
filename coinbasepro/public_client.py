@@ -268,12 +268,13 @@ class PublicClient(object):
         if start is not None:
             params['start'] = start
         if stop is not None:
-            params['stop'] = stop
+            params['end'] = stop
         if granularity is not None:
             params['granularity'] = granularity
 
-        candles = self._send_message('get', '/products/{}/candles'
-                                     .format(product_id))
+        candles = self._send_message('get',
+                                     '/products/{}/candles'.format(product_id),
+                                     params=params)
         return [convert_candle(c) for c in candles]
 
     def get_product_24hr_stats(self, product_id: str) -> Dict[str, Any]:
