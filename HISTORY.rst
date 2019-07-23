@@ -8,6 +8,13 @@ dev
 
 - [Short description of non-trivial change.]
 
+0.1.1 (2019-07-23)
+++++++++++++++++++
+
+**Bugfixes**
+
+- Parameters used for historic rates (start/end) were not being sent in query parameters (thanks imalovitsa-exos!).
+
 0.1.0 (2019-03-20)
 ++++++++++++++++++
 
