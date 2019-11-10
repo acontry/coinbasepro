@@ -4,6 +4,7 @@ from typing import Any, Dict, Iterator, List, Optional, Union
 
 from coinbasepro import PublicClient
 from coinbasepro.auth import CoinbaseProAuth
+from coinbasepro.rate_limiter import RateLimiter
 
 
 class AuthenticatedClient(PublicClient):
@@ -18,7 +19,11 @@ class AuthenticatedClient(PublicClient):
                  secret: str,
                  passphrase: str,
                  api_url: str = 'https://api.pro.coinbase.com',
-                 request_timeout: int = 30):
+                 request_timeout: int = 30,
+                 public_rate_limit: int = 3,
+                 public_burst_size: int = 6,
+                 auth_rate_limit: int = 5,
+                 auth_burst_size: int = 10):
         """Create an AuthenticatedClient instance.
 
         Args:
@@ -27,9 +32,27 @@ class AuthenticatedClient(PublicClient):
             passphrase: Your API passphrase.
             api_url: API URL. Defaults to Coinbase Pro API.
             request_timeout: Request timeout (in seconds).
+            public_rate_limit: Number of requests per second allowed
+                for public endpoints. Set to zero to disable
+                rate-limiting.
+            public_burst_size: Number of requests that can be bursted
+                when rate-limiting is enabled for public endpoints.
+            auth_rate_limit: Number of requests per second allowed
+                for auth endpoints. Set to zero to disable
+                rate-limiting.
+            auth_burst_size: Number of requests that can be bursted
+                when rate-limiting is enabled for auth endpoints.
         """
-        super(AuthenticatedClient, self).__init__(api_url, request_timeout)
+        super(AuthenticatedClient, self).__init__(api_url,
+                                                  request_timeout,
+                                                  public_rate_limit,
+                                                  public_burst_size)
         self.auth = CoinbaseProAuth(key, secret, passphrase)
+        if auth_rate_limit > 0:
+            self.a_rate_limiter = RateLimiter(burst_size=auth_burst_size,
+                                              rate_limit=auth_rate_limit)
+        else:
+            self.a_rate_limiter = None
 
     def get_account(self, account_id: str) -> Dict[str, Any]:
         """Get information for a single account.
@@ -136,7 +159,9 @@ class AuthenticatedClient(PublicClient):
                              'amount': Decimal,
                              'balance': Decimal}
         endpoint = '/accounts/{}/ledger'.format(account_id)
-        r = self._send_paginated_message(endpoint, params=kwargs)
+        r = self._send_paginated_message(endpoint,
+                                         params=kwargs,
+                                         rate_limiter=self.a_rate_limiter)
         return (self._convert_dict(activity, field_conversions)
                 for activity in r)
 
@@ -187,7 +212,9 @@ class AuthenticatedClient(PublicClient):
                              'updated_at': self._parse_datetime,
                              'amount': Decimal}
         endpoint = '/accounts/{}/holds'.format(account_id)
-        r = self._send_paginated_message(endpoint, params=kwargs)
+        r = self._send_paginated_message(endpoint,
+                                         params=kwargs,
+                                         rate_limiter=self.a_rate_limiter)
         return (self._convert_dict(hold, field_conversions) for hold in r)
 
     def place_order(self,
@@ -294,7 +321,9 @@ class AuthenticatedClient(PublicClient):
                              'fill_fees': Decimal,
                              'filled_size': Decimal,
                              'executed_value': Decimal}
-        r = self._send_message('post', '/orders', data=json.dumps(params))
+        r = self._send_message('post', '/orders',
+                               data=json.dumps(params),
+                               rate_limiter=self.a_rate_limiter)
         return self._convert_dict(r, field_conversions)
 
     def place_limit_order(self,
@@ -444,7 +473,9 @@ class AuthenticatedClient(PublicClient):
             See `get_products()`.
 
         """
-        return self._send_message('delete', '/orders/' + order_id)
+        return self._send_message('delete',
+                                  '/orders/' + order_id,
+                                  rate_limiter=self.a_rate_limiter)
 
     def cancel_all(self, product_id: Optional[str] = None) -> List[str]:
         """With best effort, cancel all open orders.
@@ -470,7 +501,10 @@ class AuthenticatedClient(PublicClient):
             params = {'product_id': product_id}
         else:
             params = None
-        return self._send_message('delete', '/orders', params=params)
+        return self._send_message('delete',
+                                  '/orders',
+                                  params=params,
+                                  rate_limiter=self.a_rate_limiter)
 
     def get_order(self, order_id: str) -> Dict[str, Any]:
         """Get a single order by order id.
@@ -514,7 +548,9 @@ class AuthenticatedClient(PublicClient):
                              'filled_size': Decimal,
                              'price': Decimal,
                              'size': Decimal}
-        r = self._send_message('get', '/orders/' + order_id)
+        r = self._send_message('get',
+                               '/orders/' + order_id,
+                               rate_limiter=self.a_rate_limiter)
         return self._convert_dict(r, field_conversions)
 
     def get_orders(self,
@@ -588,7 +624,9 @@ class AuthenticatedClient(PublicClient):
                              'fill_fees': Decimal,
                              'filled_size': Decimal,
                              'executed_value': Decimal}
-        orders = self._send_paginated_message('/orders', params=params)
+        orders = self._send_paginated_message('/orders',
+                                              params=params,
+                                              rate_limiter=self.a_rate_limiter)
         return (self._convert_dict(order, field_conversions)
                 for order in orders)
 
@@ -661,7 +699,9 @@ class AuthenticatedClient(PublicClient):
                 if 'volume' in k:
                     fill[k] = Decimal(fill[k])
             return fill
-        fills = self._send_paginated_message('/fills', params=params)
+        fills = self._send_paginated_message('/fills',
+                                             params=params,
+                                             rate_limiter=self.a_rate_limiter)
         return (self._convert_dict(convert_volume_keys(fill), field_conversions)
                 for fill in fills)
 
@@ -697,8 +737,10 @@ class AuthenticatedClient(PublicClient):
                   'payment_method_id': payment_method_id}
         field_conversions = {'amount': Decimal,
                              'payout_at': self._parse_datetime}
-        r = self._send_message('post', '/deposits/payment-method',
-                               data=json.dumps(params))
+        r = self._send_message('post',
+                               '/deposits/payment-method',
+                               data=json.dumps(params),
+                               rate_limiter=self.a_rate_limiter)
         return self._convert_dict(r, field_conversions)
 
     def deposit_from_coinbase(self,
@@ -734,8 +776,10 @@ class AuthenticatedClient(PublicClient):
         params = {'amount': amount,
                   'currency': currency,
                   'coinbase_account_id': coinbase_account_id}
-        r = self._send_message('post', '/deposits/coinbase-account',
-                               data=json.dumps(params))
+        r = self._send_message('post',
+                               '/deposits/coinbase-account',
+                               data=json.dumps(params),
+                               rate_limiter=self.a_rate_limiter)
         return self._convert_dict(r, {'amount': Decimal})
 
     def withdraw(self,
@@ -770,8 +814,10 @@ class AuthenticatedClient(PublicClient):
                   'payment_method_id': payment_method_id}
         field_conversions = {'amount': Decimal,
                              'payout_at': self._parse_datetime}
-        r = self._send_message('post', '/withdrawals/payment-method',
-                               data=json.dumps(params))
+        r = self._send_message('post',
+                               '/withdrawals/payment-method',
+                               data=json.dumps(params),
+                               rate_limiter=self.a_rate_limiter)
         return self._convert_dict(r, field_conversions)
 
     def withdraw_to_coinbase(self,
@@ -807,8 +853,10 @@ class AuthenticatedClient(PublicClient):
         params = {'amount': amount,
                   'currency': currency,
                   'coinbase_account_id': coinbase_account_id}
-        r = self._send_message('post', '/withdrawals/coinbase',
-                               data=json.dumps(params))
+        r = self._send_message('post',
+                               '/withdrawals/coinbase',
+                               data=json.dumps(params),
+                               rate_limiter=self.a_rate_limiter)
         return self._convert_dict(r, {'amount': Decimal})
 
     def withdraw_to_crypto(self,
@@ -837,8 +885,10 @@ class AuthenticatedClient(PublicClient):
         params = {'amount': amount,
                   'currency': currency,
                   'crypto_address': crypto_address}
-        r = self._send_message('post', '/withdrawals/crypto',
-                               data=json.dumps(params))
+        r = self._send_message('post',
+                               '/withdrawals/crypto',
+                               data=json.dumps(params),
+                               rate_limiter=self.a_rate_limiter)
         return self._convert_dict(r, {'amount': Decimal})
 
     def get_payment_methods(self) -> List[Dict[str, Any]]:
@@ -853,7 +903,9 @@ class AuthenticatedClient(PublicClient):
         """
         field_conversions = {'created_at': self._parse_datetime,
                              'updated_at': self._parse_datetime}
-        r = self._send_message('get', '/payment-methods')
+        r = self._send_message('get',
+                               '/payment-methods',
+                               rate_limiter=self.a_rate_limiter)
         return self._convert_list_of_dicts(r, field_conversions)
 
     def get_coinbase_accounts(self) -> List[Dict[str, Any]]:
@@ -868,7 +920,9 @@ class AuthenticatedClient(PublicClient):
         """
         field_conversions = {'balance': Decimal,
                              'hold_balance': Decimal}
-        r = self._send_message('get', '/coinbase-accounts')
+        r = self._send_message('get',
+                               '/coinbase-accounts',
+                               self.a_rate_limiter)
         return self._convert_list_of_dicts(r, field_conversions)
 
     def create_report(self,
@@ -926,8 +980,10 @@ class AuthenticatedClient(PublicClient):
         if email is not None:
             params['email'] = email
 
-        return self._send_message('post', '/reports',
-                                  data=json.dumps(params))
+        return self._send_message('post',
+                                  '/reports',
+                                  data=json.dumps(params),
+                                  rate_limiter=self.a_rate_limiter)
 
     def get_report(self, report_id: str) -> Dict[str, Any]:
         """Get report status.
@@ -944,7 +1000,9 @@ class AuthenticatedClient(PublicClient):
             See `get_products()`.
 
         """
-        return self._send_message('get', '/reports/' + report_id)
+        return self._send_message('get',
+                                  '/reports/' + report_id,
+                                  rate_limiter=self.a_rate_limiter)
 
     def get_trailing_volume(self) -> List[Dict[str, Any]]:
         """Get your 30-day trailing volume for all products.
@@ -972,14 +1030,18 @@ class AuthenticatedClient(PublicClient):
         field_conversions = {'exchange_volume': Decimal,
                              'volume': Decimal,
                              'recorded_at': self._parse_datetime}
-        r = self._send_message('get', '/users/self/trailing-volume')
+        r = self._send_message('get',
+                               '/users/self/trailing-volume',
+                               rate_limiter=self.a_rate_limiter)
         return self._convert_dict(field_conversions, r)
 
     def _get_account_helper(self, account_id):
         field_conversions = {'balance': Decimal,
                              'available': Decimal,
                              'hold': Decimal}
-        r = self._send_message('get', '/accounts/' + account_id)
+        r = self._send_message('get',
+                               '/accounts/' + account_id,
+                               rate_limiter=self.a_rate_limiter)
         # Need to handle empty string `account_id`, which returns all accounts
         if type(r) is list:
             return self._convert_list_of_dicts(r, field_conversions)
