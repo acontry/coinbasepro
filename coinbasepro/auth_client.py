@@ -32,7 +32,7 @@ class AuthenticatedClient(PublicClient):
         self.auth = CoinbaseProAuth(key, secret, passphrase)
 
     def get_account(self, account_id: str) -> Dict[str, Any]:
-        """Gets information for a single account.
+        """Get information for a single account.
 
         Use this endpoint when you know the account_id.
 
@@ -57,7 +57,7 @@ class AuthenticatedClient(PublicClient):
         return self._get_account_helper(account_id)
 
     def get_accounts(self) -> List[Dict[str, Any]]:
-        """Gets a list of trading all accounts.
+        """Get a list of trading all accounts.
 
         When you place an order, the funds for the order are placed on
         hold. They cannot be used for other orders or withdrawn. Funds
@@ -88,7 +88,7 @@ class AuthenticatedClient(PublicClient):
 
     def get_account_history(
             self, account_id: str, **kwargs) -> Iterator[Dict[str, Any]]:
-        """Lists account activity.
+        """List account activity.
 
         Account activity either increases or decreases your account
         balance.
@@ -142,7 +142,7 @@ class AuthenticatedClient(PublicClient):
 
     def get_account_holds(
             self, account_id: str, **kwargs) -> Iterator[Dict[str, Any]]:
-        """Gets holds on an account.
+        """Get holds on an account.
 
         Holds are placed on an account for active orders or
         pending withdraw requests.
@@ -199,7 +199,7 @@ class AuthenticatedClient(PublicClient):
                     client_oid: Optional[str] = None,
                     stp: Optional[str] = None,
                     **kwargs) -> Dict[str, Any]:
-        """Places an order.
+        """Place an order.
 
         The two order types (limit and market) can be placed using this
         method. Specific methods are provided for each order type, but
@@ -309,7 +309,7 @@ class AuthenticatedClient(PublicClient):
                           time_in_force: Optional[str] = None,
                           cancel_after: Optional[str] = None,
                           post_only: Optional[bool] = None) -> Dict[str, Any]:
-        """Places a limit order.
+        """Place a limit order.
 
         Args:
             product_id: Product to order (eg. 'BTC-USD').
@@ -372,7 +372,7 @@ class AuthenticatedClient(PublicClient):
                            stop_price: Optional[Union[float, Decimal]] = None,
                            client_oid: Optional[str] = None,
                            stp: Optional[str] = None) -> Dict[str, Any]:
-        """Places a market order.
+        """Place a market order.
 
         `size` and `funds` parameters specify the order amount. `funds`
         will limit how much of your quote currency account balance is
@@ -420,7 +420,7 @@ class AuthenticatedClient(PublicClient):
         return self.place_order(**params)
 
     def cancel_order(self, order_id: str) -> List[str]:
-        """Cancels a previously placed order.
+        """Cancel a previously placed order.
 
         If the order had no matches during its lifetime its record may
         be purged. This means the order details will not be available
@@ -447,7 +447,7 @@ class AuthenticatedClient(PublicClient):
         return self._send_message('delete', '/orders/' + order_id)
 
     def cancel_all(self, product_id: Optional[str] = None) -> List[str]:
-        """With best effort, cancels all open orders.
+        """With best effort, cancel all open orders.
 
         Args:
             product_id: Only cancel orders for this product_id.
@@ -473,7 +473,7 @@ class AuthenticatedClient(PublicClient):
         return self._send_message('delete', '/orders', params=params)
 
     def get_order(self, order_id: str) -> Dict[str, Any]:
-        """Gets a single order by order id.
+        """Get a single order by order id.
 
         If the order is canceled the response may have status code 404
         if the order had no matches.
@@ -521,7 +521,7 @@ class AuthenticatedClient(PublicClient):
                    product_id: Optional[str] = None,
                    status: Optional[Union[str, List[str]]] = None,
                    **kwargs) -> Iterator[Dict[str, Any]]:
-        """Lists your current open orders.
+        """List your current open orders.
 
         Only open or un-settled orders are returned. As soon as an
         order is no longer open and settled, it will no longer appear
@@ -596,7 +596,7 @@ class AuthenticatedClient(PublicClient):
                   product_id: Optional[str] = None,
                   order_id: Optional[str] = None,
                   **kwargs) -> Iterator[Dict[str, Any]]:
-        """Gets recent fills for a product or order.
+        """Get recent fills for a product or order.
 
         Either `product_id` or `order_id` must be specified.
 
@@ -669,7 +669,7 @@ class AuthenticatedClient(PublicClient):
                 amount: Union[float, Decimal],
                 currency: str,
                 payment_method_id: str) -> Dict[str, Any]:
-        """Deposits funds from a payment method.
+        """Deposit funds from a payment method.
 
         See AuthenticatedClient.get_payment_methods() to receive
         information regarding payment methods.
@@ -705,7 +705,7 @@ class AuthenticatedClient(PublicClient):
                               amount: Union[float, Decimal],
                               currency: str,
                               coinbase_account_id: str) -> Dict[str, Any]:
-        """Deposits funds from a Coinbase account.
+        """Deposit funds from a Coinbase account.
 
         You can move funds between your Coinbase accounts and your
         Coinbase Pro trading accounts within your daily limits. Moving
@@ -742,7 +742,7 @@ class AuthenticatedClient(PublicClient):
                  amount: Union[float, Decimal],
                  currency: str,
                  payment_method_id: str) -> Dict[str, Any]:
-        """Withdraws funds to a payment method.
+        """Withdraw funds to a payment method.
 
         See AuthenticatedClient.get_payment_methods() to receive
         information regarding payment methods.
@@ -778,7 +778,7 @@ class AuthenticatedClient(PublicClient):
                              amount: Union[float, Decimal],
                              currency: str,
                              coinbase_account_id: str) -> Dict[str, Any]:
-        """Withdraws funds to a coinbase account.
+        """Withdraw funds to a coinbase account.
 
         You can move funds between your Coinbase accounts and your
         Coinbase Pro trading accounts within your daily limits. Moving
@@ -815,7 +815,7 @@ class AuthenticatedClient(PublicClient):
                            amount: Union[float, Decimal],
                            currency: str,
                            crypto_address: str):
-        """Withdraws funds to a crypto address.
+        """Withdraw funds to a crypto address.
 
         Args:
             amount: The amount to withdraw.
@@ -842,7 +842,7 @@ class AuthenticatedClient(PublicClient):
         return self._convert_dict(r, {'amount': Decimal})
 
     def get_payment_methods(self) -> List[Dict[str, Any]]:
-        """Gets a list of your payment methods.
+        """Get a list of your payment methods.
 
         Returns:
             Payment method details.
@@ -857,7 +857,7 @@ class AuthenticatedClient(PublicClient):
         return self._convert_list_of_dicts(r, field_conversions)
 
     def get_coinbase_accounts(self) -> List[Dict[str, Any]]:
-        """Gets a list of your coinbase accounts.
+        """Get a list of your coinbase accounts.
 
         Returns:
             Coinbase account details.
@@ -879,7 +879,7 @@ class AuthenticatedClient(PublicClient):
                       account_id: Optional[str] = None,
                       report_format: str = 'pdf',
                       email: Optional[str] = None) -> Dict[str, Any]:
-        """Creates report of historic information about your account.
+        """Create report of historic information about your account.
 
         The report will be generated when resources are available.
         Report status can be queried via `get_report(report_id)`.
@@ -930,7 +930,7 @@ class AuthenticatedClient(PublicClient):
                                   data=json.dumps(params))
 
     def get_report(self, report_id: str) -> Dict[str, Any]:
-        """Gets report status.
+        """Get report status.
 
         Use to query a specific report once it has been requested.
 
@@ -947,7 +947,7 @@ class AuthenticatedClient(PublicClient):
         return self._send_message('get', '/reports/' + report_id)
 
     def get_trailing_volume(self) -> List[Dict[str, Any]]:
-        """Gets your 30-day trailing volume for all products.
+        """Get your 30-day trailing volume for all products.
 
         This is a cached value that's calculated every day at midnight UTC.
 

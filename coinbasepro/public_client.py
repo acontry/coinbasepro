@@ -20,7 +20,7 @@ class PublicClient(object):
     def __init__(self,
                  api_url: str = 'https://api.pro.coinbase.com',
                  request_timeout: int = 30):
-        """Creates a Coinbase Pro API public client instance.
+        """Create a Coinbase Pro API public client instance.
 
         Args:
             api_url: API URL. Defaults to Coinbase Pro API.
@@ -33,7 +33,7 @@ class PublicClient(object):
         self.request_timeout = request_timeout
 
     def get_products(self) -> List[Dict[str, Any]]:
-        """Gets a list of available currency pairs for trading.
+        """Get a list of available currency pairs for trading.
 
         The `base_min_size` and `base_max_size` fields define the min
         and max order size. The `quote_increment` field specifies the
@@ -87,7 +87,7 @@ class PublicClient(object):
         return self._convert_list_of_dicts(r, field_conversions)
 
     def get_product_order_book(self, product_id: str, level: int = 1) -> Dict:
-        """Gets a list of open orders for a product.
+        """Get a list of open orders for a product.
 
         The amount of detail shown can be customized with the `level`
         parameter:
@@ -164,7 +164,7 @@ class PublicClient(object):
         return self._convert_dict(r, field_conversions)
 
     def get_product_trades(self, product_id: str) -> Iterator[Dict[str, Any]]:
-        """Lists the latest trades for a product.
+        """List the latest trades for a product.
 
         This method returns a generator which may make multiple HTTP
         requests while iterating through it.
@@ -207,7 +207,7 @@ class PublicClient(object):
                                    stop: Optional[str] = None,
                                    granularity: Optional[str] = None
                                    ) -> List[Dict[str, Any]]:
-        """Gets historic rates for a product.
+        """Get historic rates for a product.
 
         Rates are returned in grouped buckets based on requested
         `granularity`. If start, end, and granularity aren't provided,
@@ -275,7 +275,7 @@ class PublicClient(object):
         return [convert_candle(c) for c in candles]
 
     def get_product_24hr_stats(self, product_id: str) -> Dict[str, Any]:
-        """Gets 24 hr stats for the product.
+        """Get 24 hr stats for the product.
 
         Args:
             product_id: Product.
@@ -307,7 +307,7 @@ class PublicClient(object):
         return self._convert_dict(stats, field_conversions)
 
     def get_currencies(self) -> List[Dict[str, Any]]:
-        """Lists known currencies.
+        """List known currencies.
 
         Returns:
             List of currencies. Example::
@@ -350,7 +350,7 @@ class PublicClient(object):
         return self._convert_list_of_dicts(currencies, field_conversions)
 
     def get_time(self) -> Dict[str, Any]:
-        """Gets the API server time.
+        """Get the API server time.
 
         Returns:
             Server time in ISO and epoch format (decimal seconds since
