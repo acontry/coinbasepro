@@ -10,8 +10,8 @@ class AuthenticatedClient(PublicClient):
     """Provides access to authenticated requests on the Coinbase Pro API.
 
     Attributes:
-        api_url (str): The api url for this client instance to use.
-        auth (CoinbaseProAuth): Custom authentication handler for each request.
+        api_url: The api url for this client instance to use.
+        auth: Custom authentication handler for each request.
     """
     def __init__(self,
                  key: str,

@@ -11,9 +11,9 @@ class PublicClient(object):
     """Coinbase Pro public client API.
 
     Attributes:
-        url (Optional[str]): API URL. Defaults to Coinbase Pro API.
-        session (requests.Session): Persistent HTTP connection object.
-        request_timeout (int): HTTP request timeout (in seconds).
+        url: API URL. Defaults to Coinbase Pro API.
+        session: Persistent HTTP connection object.
+        request_timeout: HTTP request timeout (in seconds).
 
     """
 
