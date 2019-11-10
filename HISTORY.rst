@@ -6,7 +6,14 @@ Release History
 dev
 +++
 
-- [Short description of non-trivial change.]
+- [change here]
+
+0.2.0 (2019-11-10)
+++++++++++++++++++
+
+**Improvements**
+
+- Added rate-limiting to all public and authenticated endpoints. Dropping support for Python 3.4 to keep the implemenation simple.
 
 0.1.1 (2019-07-23)
 ++++++++++++++++++
