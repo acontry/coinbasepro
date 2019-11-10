@@ -10,9 +10,6 @@ from coinbasepro.exceptions import (CoinbaseAPIError, BadRequest, InvalidAPIKey,
 class PublicClient(object):
     """Coinbase Pro public client API.
 
-    All requests default to the `product_id` specified at object
-    creation if not otherwise specified.
-
     Attributes:
         url (Optional[str]): API URL. Defaults to Coinbase Pro API.
         session (requests.Session): Persistent HTTP connection object.
