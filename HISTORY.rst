@@ -8,6 +8,13 @@ dev
 
 - [change here]
 
+0.2.1 (2020-01-09)
+++++++++++++++++++
+
+**Bugfixes**
+
+- Fix volume parsing error in `get_fills`.
+
 0.2.0 (2019-11-10)
 ++++++++++++++++++
 
