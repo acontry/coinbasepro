@@ -696,7 +696,7 @@ class AuthenticatedClient(PublicClient):
         def convert_volume_keys(fill):
             """Convert any 'volume' keys (like 'usd_volume') to Decimal."""
             for k, v in fill.items():
-                if 'volume' in k:
+                if 'volume' in k and v is not None:
                     fill[k] = Decimal(fill[k])
             return fill
         fills = self._send_paginated_message('/fills',
