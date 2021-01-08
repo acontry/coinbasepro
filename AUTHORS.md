@@ -3,7 +3,7 @@
 * khoo-j
 
 ## Acknowledgements
-This package was derived from: 
+This package was derived from:
 
 ###GDAX-Python
 

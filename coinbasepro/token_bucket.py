@@ -10,10 +10,7 @@ class TokenBucket:
     time/amount.
     """
 
-    def __init__(self,
-                 max_amount: int,
-                 refill_period: float,
-                 refill_amount: int):
+    def __init__(self, max_amount: int, refill_period: float, refill_amount: int):
         """Create a token bucket.
 
         Args:
@@ -35,8 +32,12 @@ class TokenBucket:
 
     def time_to_next_token(self):
         """Time remaining until next token is added to the bucket."""
-        return (self.last_update + self.refill_period - time.monotonic() -
-                self._refill_count() * self.refill_period)
+        return (
+            self.last_update
+            + self.refill_period
+            - time.monotonic()
+            - self._refill_count() * self.refill_period
+        )
 
     def reset(self):
         """Reset bucket."""
@@ -46,8 +47,7 @@ class TokenBucket:
     def get(self):
         """Get count of bucket."""
         return min(
-            self.max_amount,
-            self.value + self._refill_count() * self.refill_amount
+            self.max_amount, self.value + self._refill_count() * self.refill_amount
         )
 
     def reduce(self, tokens: int):

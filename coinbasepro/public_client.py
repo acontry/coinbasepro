@@ -3,8 +3,13 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, Iterator, List, Optional, Union
 
-from coinbasepro.exceptions import (CoinbaseAPIError, BadRequest, InvalidAPIKey,
-                                    InvalidAuthorization, RateLimitError)
+from coinbasepro.exceptions import (
+    CoinbaseAPIError,
+    BadRequest,
+    InvalidAPIKey,
+    InvalidAuthorization,
+    RateLimitError,
+)
 from coinbasepro.rate_limiter import RateLimiter
 
 
@@ -18,11 +23,13 @@ class PublicClient(object):
 
     """
 
-    def __init__(self,
-                 api_url: str = 'https://api.pro.coinbase.com',
-                 request_timeout: int = 30,
-                 rate_limit: int = 3,
-                 burst_size: int = 6):
+    def __init__(
+        self,
+        api_url: str = "https://api.pro.coinbase.com",
+        request_timeout: int = 30,
+        rate_limit: int = 3,
+        burst_size: int = 6,
+    ):
         """Create a Coinbase Pro API public client instance.
 
         Args:
@@ -34,13 +41,14 @@ class PublicClient(object):
                 when rate-limiting is enabled.
 
         """
-        self.url = api_url.rstrip('/')
+        self.url = api_url.rstrip("/")
         self.auth = None  # No auth needed for public client
         self.session = requests.Session()
         self.request_timeout = request_timeout
         if rate_limit > 0:
-            self.p_rate_limiter = RateLimiter(burst_size=burst_size,
-                                              rate_limit=rate_limit)
+            self.p_rate_limiter = RateLimiter(
+                burst_size=burst_size, rate_limit=rate_limit
+            )
         else:
             self.p_rate_limiter = None
 
@@ -92,12 +100,12 @@ class PublicClient(object):
                 Additionally, parent of all above exceptions.
 
         """
-        field_conversions = {'base_min_size': Decimal,
-                             'base_max_size': Decimal,
-                             'quote_increment': Decimal}
-        r = self._send_message('get',
-                               '/products',
-                               rate_limiter=self.p_rate_limiter)
+        field_conversions = {
+            "base_min_size": Decimal,
+            "base_max_size": Decimal,
+            "quote_increment": Decimal,
+        }
+        r = self._send_message("get", "/products", rate_limiter=self.p_rate_limiter)
         return self._convert_list_of_dicts(r, field_conversions)
 
     def get_product_order_book(self, product_id: str, level: int = 1) -> Dict:
@@ -137,11 +145,13 @@ class PublicClient(object):
             See `get_products()`.
 
         """
-        params = {'level': level}
-        return self._send_message('get',
-                                  '/products/{}/book'.format(product_id),
-                                  params=params,
-                                  rate_limiter=self.p_rate_limiter)
+        params = {"level": level}
+        return self._send_message(
+            "get",
+            "/products/{}/book".format(product_id),
+            params=params,
+            rate_limiter=self.p_rate_limiter,
+        )
 
     def get_product_ticker(self, product_id: str) -> Dict[str, Any]:
         """Snapshot about the last trade (tick), best bid/ask and 24h volume.
@@ -168,16 +178,20 @@ class PublicClient(object):
             See `get_products()`.
 
         """
-        field_conversions = {'trade_id': int,
-                             'price': Decimal,
-                             'size': Decimal,
-                             'bid': Decimal,
-                             'ask': Decimal,
-                             'volume': Decimal,
-                             'time': self._parse_datetime}
-        r = self._send_message('get',
-                               '/products/{}/ticker'.format(product_id),
-                               rate_limiter=self.p_rate_limiter)
+        field_conversions = {
+            "trade_id": int,
+            "price": Decimal,
+            "size": Decimal,
+            "bid": Decimal,
+            "ask": Decimal,
+            "volume": Decimal,
+            "time": self._parse_datetime,
+        }
+        r = self._send_message(
+            "get",
+            "/products/{}/ticker".format(product_id),
+            rate_limiter=self.p_rate_limiter,
+        )
         return self._convert_dict(r, field_conversions)
 
     def get_product_trades(self, product_id: str) -> Iterator[Dict[str, Any]]:
@@ -209,23 +223,24 @@ class PublicClient(object):
             See `get_products()`.
 
         """
-        field_conversions = {'time': self._parse_datetime,
-                             'trade_id': int,
-                             'price': Decimal,
-                             'size': Decimal}
+        field_conversions = {
+            "time": self._parse_datetime,
+            "trade_id": int,
+            "price": Decimal,
+            "size": Decimal,
+        }
         trades = self._send_paginated_message(
-            '/products/{}/trades'.format(product_id),
-            rate_limiter=self.p_rate_limiter
+            "/products/{}/trades".format(product_id), rate_limiter=self.p_rate_limiter
         )
-        return (self._convert_dict(trade, field_conversions)
-                for trade in trades)
+        return (self._convert_dict(trade, field_conversions) for trade in trades)
 
-    def get_product_historic_rates(self,
-                                   product_id: str,
-                                   start: Optional[str] = None,
-                                   stop: Optional[str] = None,
-                                   granularity: Optional[str] = None
-                                   ) -> List[Dict[str, Any]]:
+    def get_product_historic_rates(
+        self,
+        product_id: str,
+        start: Optional[str] = None,
+        stop: Optional[str] = None,
+        granularity: Optional[str] = None,
+    ) -> List[Dict[str, Any]]:
         """Get historic rates for a product.
 
         Rates are returned in grouped buckets based on requested
@@ -270,28 +285,31 @@ class PublicClient(object):
             See `get_products()`.
 
         """
+
         def convert_candle(c):
             out = dict()
-            out['time'] = datetime.utcfromtimestamp(c[0])
-            out['low'] = c[1]
-            out['high'] = c[2]
-            out['open'] = c[3]
-            out['close'] = c[4]
-            out['volume'] = c[5]
+            out["time"] = datetime.utcfromtimestamp(c[0])
+            out["low"] = c[1]
+            out["high"] = c[2]
+            out["open"] = c[3]
+            out["close"] = c[4]
+            out["volume"] = c[5]
             return out
 
         params = {}
         if start is not None:
-            params['start'] = start
+            params["start"] = start
         if stop is not None:
-            params['end'] = stop
+            params["end"] = stop
         if granularity is not None:
-            params['granularity'] = granularity
+            params["granularity"] = granularity
 
-        candles = self._send_message('get',
-                                     '/products/{}/candles'.format(product_id),
-                                     params=params,
-                                     rate_limiter=self.p_rate_limiter)
+        candles = self._send_message(
+            "get",
+            "/products/{}/candles".format(product_id),
+            params=params,
+            rate_limiter=self.p_rate_limiter,
+        )
         return [convert_candle(c) for c in candles]
 
     def get_product_24hr_stats(self, product_id: str) -> Dict[str, Any]:
@@ -316,15 +334,19 @@ class PublicClient(object):
             See `get_products()`.
 
         """
-        field_conversions = {'open': Decimal,
-                             'high': Decimal,
-                             'low': Decimal,
-                             'volume': Decimal,
-                             'last': Decimal,
-                             'volume_30day': Decimal}
-        stats = self._send_message('get',
-                                   '/products/{}/stats'.format(product_id),
-                                   rate_limiter=self.p_rate_limiter)
+        field_conversions = {
+            "open": Decimal,
+            "high": Decimal,
+            "low": Decimal,
+            "volume": Decimal,
+            "last": Decimal,
+            "volume_30day": Decimal,
+        }
+        stats = self._send_message(
+            "get",
+            "/products/{}/stats".format(product_id),
+            rate_limiter=self.p_rate_limiter,
+        )
         return self._convert_dict(stats, field_conversions)
 
     def get_currencies(self) -> List[Dict[str, Any]]:
@@ -366,10 +388,10 @@ class PublicClient(object):
             See `get_products()`.
 
         """
-        field_conversions = {'min_size': Decimal}
-        currencies = self._send_message('get',
-                                        '/currencies',
-                                        rate_limiter=self.p_rate_limiter)
+        field_conversions = {"min_size": Decimal}
+        currencies = self._send_message(
+            "get", "/currencies", rate_limiter=self.p_rate_limiter
+        )
         return self._convert_list_of_dicts(currencies, field_conversions)
 
     def get_time(self) -> Dict[str, Any]:
@@ -387,17 +409,15 @@ class PublicClient(object):
             See `get_products()`.
 
         """
-        field_conversions = {'iso': self._parse_datetime}
-        times = self._send_message('get',
-                                   '/time',
-                                   rate_limiter=self.p_rate_limiter)
+        field_conversions = {"iso": self._parse_datetime}
+        times = self._send_message("get", "/time", rate_limiter=self.p_rate_limiter)
         return self._convert_dict(times, field_conversions)
 
     @staticmethod
     def _check_errors_and_raise(response):
         """Check for error codes and raise an exception if necessary."""
         if 400 <= response.status_code < 600:
-            message = response.json()['message']
+            message = response.json()["message"]
             if response.status_code == 400:
                 raise BadRequest(message)
             elif response.status_code == 401:
@@ -409,13 +429,14 @@ class PublicClient(object):
             else:
                 raise CoinbaseAPIError(message)
 
-    def _send_message(self,
-                      method: str,
-                      endpoint: str,
-                      params: Optional[Dict] = None,
-                      data: Optional[str] = None,
-                      rate_limiter: Optional[RateLimiter] = None
-                      ) -> Union[List, Dict]:
+    def _send_message(
+        self,
+        method: str,
+        endpoint: str,
+        params: Optional[Dict] = None,
+        data: Optional[str] = None,
+        rate_limiter: Optional[RateLimiter] = None,
+    ) -> Union[List, Dict]:
         """Sends API request.
 
         Args:
@@ -435,20 +456,23 @@ class PublicClient(object):
         url = self.url + endpoint
         if rate_limiter:
             rate_limiter.rate_limit()
-        r = self.session.request(method,
-                                 url,
-                                 params=params,
-                                 data=data,
-                                 auth=self.auth,
-                                 timeout=self.request_timeout)
+        r = self.session.request(
+            method,
+            url,
+            params=params,
+            data=data,
+            auth=self.auth,
+            timeout=self.request_timeout,
+        )
         self._check_errors_and_raise(r)
         return r.json(parse_float=Decimal)
 
-    def _send_paginated_message(self,
-                                endpoint: str,
-                                params: Optional[Dict] = None,
-                                rate_limiter: Optional[RateLimiter] = None
-                                ) -> Iterator[Dict]:
+    def _send_paginated_message(
+        self,
+        endpoint: str,
+        params: Optional[Dict] = None,
+        rate_limiter: Optional[RateLimiter] = None,
+    ) -> Iterator[Dict]:
         """Sends API message that results in a paginated response.
 
         The paginated responses are abstracted away by making API
@@ -484,10 +508,9 @@ class PublicClient(object):
         while True:
             if rate_limiter:
                 rate_limiter.rate_limit()
-            r = self.session.get(url,
-                                 params=params,
-                                 auth=self.auth,
-                                 timeout=self.request_timeout)
+            r = self.session.get(
+                url, params=params, auth=self.auth, timeout=self.request_timeout
+            )
             self._check_errors_and_raise(r)
             results = r.json(parse_float=Decimal)
             for result in results:
@@ -496,18 +519,17 @@ class PublicClient(object):
             # param to get next page.
             # If this request included `before` don't get any more pages - the
             # Coinbase pro API doesn't support multiple pages in that case.
-            if not r.headers.get('cb-after') or \
-                    params.get('before') is not None:
+            if not r.headers.get("cb-after") or params.get("before") is not None:
                 break
             else:
-                params['after'] = r.headers['cb-after']
+                params["after"] = r.headers["cb-after"]
 
     @staticmethod
     def _parse_datetime(dt):
         try:
-            return datetime.strptime(dt, '%Y-%m-%dT%H:%M:%S.%fZ')
+            return datetime.strptime(dt, "%Y-%m-%dT%H:%M:%S.%fZ")
         except ValueError:
-            return datetime.strptime(dt, '%Y-%m-%dT%H:%M:%SZ')
+            return datetime.strptime(dt, "%Y-%m-%dT%H:%M:%SZ")
 
     @staticmethod
     def _convert_dict(r, field_conversions):

@@ -9,11 +9,12 @@ class RateLimiter:
 
     Can be configured with a burst size and long term rate limit.
     """
+
     def __init__(self, burst_size: int, rate_limit: int):
         self.lock = threading.Lock()
-        self.token_bucket = TokenBucket(max_amount=burst_size,
-                                        refill_period=1.,
-                                        refill_amount=rate_limit)
+        self.token_bucket = TokenBucket(
+            max_amount=burst_size, refill_period=1.0, refill_amount=rate_limit
+        )
 
     def rate_limit(self):
         """Blocks until a token can be obtained from the bucket."""
