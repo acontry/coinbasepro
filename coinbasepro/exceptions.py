@@ -1,5 +1,3 @@
-
-
 class CoinbaseAPIError(IOError):
     """There was an ambiguous exception that occurred."""
 

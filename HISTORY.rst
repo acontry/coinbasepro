@@ -20,7 +20,7 @@ dev
 
 **Improvements**
 
-- Added rate-limiting to all public and authenticated endpoints. Dropping support for Python 3.4 to keep the implemenation simple.
+- Added rate-limiting to all public and authenticated endpoints. Dropping support for Python 3.4 to keep the implementation simple.
 
 0.1.1 (2019-07-23)
 ++++++++++++++++++

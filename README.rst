@@ -105,7 +105,7 @@ Features
     # This call throws a BadRequest exception
     >>> auth_client.get_order('invalid_order_num')
     coinbasepro.exceptions.BadRequest: Invalid order id
-    
+
     # CoinbaseAPIError is the parent exception for all exceptions the API
     # throws, so catching this will catch anything
     >>> try:
