@@ -11,7 +11,7 @@ requires = ["requests>=2.20.0"]
 
 setuptools.setup(
     name="coinbasepro",
-    version="0.2.1",
+    version="0.3.0",
     description="A Python interface for the Coinbase Pro API.",
     long_description=readme + "\n\n" + history,
     long_description_content_type="text/x-rst",
