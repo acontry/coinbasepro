@@ -8,6 +8,13 @@ dev
 
 - [change here]
 
+0.3.0 (2021-03-13)
+++++++++++++++++++
+
+**Improvements**
+
+- Add `trade_id` param to `get_trades`. Allows you to get trades starting from an arbitrary trade, instead of only the most recent trade.
+
 0.2.1 (2020-01-09)
 ++++++++++++++++++
 
