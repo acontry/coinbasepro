@@ -194,7 +194,9 @@ class PublicClient(object):
         )
         return self._convert_dict(r, field_conversions)
 
-    def get_product_trades(self, product_id: str) -> Iterator[Dict[str, Any]]:
+    def get_product_trades(
+        self, product_id: str, trade_id: Optional[int] = None
+    ) -> Iterator[Dict[str, Any]]:
         """List the latest trades for a product.
 
         This method returns a generator which may make multiple HTTP
@@ -202,6 +204,7 @@ class PublicClient(object):
 
         Args:
             product_id: Product.
+            trade_id: Trade id to start from.
 
         Yields:
             Latest trades. Example::
@@ -223,6 +226,8 @@ class PublicClient(object):
             See `get_products()`.
 
         """
+        params = {"after": trade_id + 1} if trade_id else None
+
         field_conversions = {
             "time": self._parse_datetime,
             "trade_id": int,
@@ -230,7 +235,9 @@ class PublicClient(object):
             "size": Decimal,
         }
         trades = self._send_paginated_message(
-            "/products/{}/trades".format(product_id), rate_limiter=self.p_rate_limiter
+            "/products/{}/trades".format(product_id),
+            params=params,
+            rate_limiter=self.p_rate_limiter,
         )
         return (self._convert_dict(trade, field_conversions) for trade in trades)
 
