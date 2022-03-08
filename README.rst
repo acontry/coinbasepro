@@ -121,3 +121,26 @@ Installation
 .. code-block:: bash
 
     $ pip install coinbasepro
+
+Development
+------------
+
+Environment Setup
+^^^^^^^^^^^^^^^^^
+
+1. Create virtual environment using preferred tool
+2. Bootstrap `pip-tools` by installing dev requirements directly:
+
+.. code-block:: bash
+
+    $ pip install -r requirements.txt
+
+Once `pip-tools` is installed in your environment, you can update requirements by:
+
+.. code-block:: bash
+
+    $ make install-requirements
+
+3. (Optional) Install `pre-commit git hooks <https://pre-commit.com/#3-install-the-git-hook-scripts>`_.
+This will run pre-commit with every commit, which should fix any lint issues
+before you push changes to your remote branch.

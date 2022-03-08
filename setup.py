@@ -22,6 +22,13 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     python_requires=">=3.4.x",
     install_requires=requires,
+    extras_require={
+        "dev": [
+            "pip-tools",
+            "pre-commit",
+            "pygments",  # Pycharm readme rendering workaround
+        ]
+    },
     classifiers=(
         "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
