@@ -968,7 +968,9 @@ class AuthenticatedClient(PublicClient):
 
         """
         field_conversions = {"balance": Decimal, "hold_balance": Decimal}
-        r = self._send_message("get", "/coinbase-accounts", self.a_rate_limiter)
+        r = self._send_message(
+            "get", "/coinbase-accounts", rate_limiter=self.a_rate_limiter
+        )
         return self._convert_list_of_dicts(r, field_conversions)
 
     def create_report(
