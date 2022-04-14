@@ -15,4 +15,4 @@ class InvalidAuthorization(CoinbaseAPIError, ValueError):
 
 
 class RateLimitError(CoinbaseAPIError):
-    """Too many requests were made """
+    """Too many requests were made."""
