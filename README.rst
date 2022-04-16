@@ -126,7 +126,7 @@ Development
 ------------
 
 Environment Setup
-^^^^^^^^^^^^^^^^^
++++++++++++++++++
 
 1. Create virtual environment using preferred tool
 2. Bootstrap `pip-tools` by installing dev requirements directly:

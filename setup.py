@@ -29,7 +29,7 @@ setuptools.setup(
             "pygments",  # Pycharm readme rendering workaround
         ]
     },
-    classifiers=(
+    classifiers=[
         "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
         "Natural Language :: English",
@@ -41,5 +41,5 @@ setuptools.setup(
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
-    ),
+    ],
 )
