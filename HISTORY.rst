@@ -8,6 +8,13 @@ dev
 
 - [change here]
 
+0.3.1 (2022-04-15)
+++++++++++++++++++
+
+**Bugfixes**
+
+- Fix ratelimiting in `get_coinbase_accounts` method.
+
 0.3.0 (2021-03-13)
 ++++++++++++++++++
 
