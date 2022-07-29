@@ -897,7 +897,7 @@ class AuthenticatedClient(PublicClient):
         }
         r = self._send_message(
             "post",
-            "/withdrawals/coinbase",
+            "/withdrawals/coinbase-account",
             data=json.dumps(params),
             rate_limiter=self.a_rate_limiter,
         )
