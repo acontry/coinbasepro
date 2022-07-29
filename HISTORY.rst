@@ -8,6 +8,23 @@ dev
 
 - [change here]
 
+0.4.0 (2022-07-28)
+++++++++++++++++++
+
+**Improvements**
+
+- Add `get_account_transfers` method.
+- Add `get_all_transfers` method.
+- Add `get_address_book` method.
+- Add `generate_crypto_address` method.
+
+0.3.2 (2022-07-28)
+++++++++++++++++++
+
+**Bugfixes**
+
+- Fix url in `withdraw_to_coinbase` method.
+
 0.3.1 (2022-04-15)
 ++++++++++++++++++
 

@@ -55,34 +55,37 @@ class PublicClient(object):
     def get_products(self) -> List[Dict[str, Any]]:
         """Get a list of available currency pairs for trading.
 
-        The `base_min_size` and `base_max_size` fields define the min
-        and max order size. The `quote_increment` field specifies the
-        min order price as well as the price increment.
+        The `min_market_funds` and `max_market_funds` fields define
+        the min and max funds allowed in a market order.
 
-        The order price must be a multiple of this increment (i.e. if
-        the increment is 0.01, order prices of 0.001 or 0.021 would be
-        rejected).
+        The `quote_increment` field specifies the min order price as
+        well as the price increment. The order price must be a multiple
+        of this increment (i.e. if the increment is 0.01, order prices
+        of 0.001 or 0.021 would be rejected).
 
         Returns:
             Info about all currency pairs. Example::
                 [
                     {
-                        'id': 'BTC-USD',
-                        'display_name': 'BTC/USD',
-                        'base_currency': 'BTC',
-                        'quote_currency': 'USD',
-                        'base_min_size': Decimal('0.001'),
-                        'base_max_size': Decimal('70'),
-                        'quote_increment': Decimal('0.01'),
-                        'display_name': 'BTC/USD',
-                        'status': 'online',
-                        'margin_enabled': False,
-                        'status_message': None,
-                        'min_market_funds': 10,
-                        'max_market_funds': 1000000,
-                        'post_only': False,
-                        'limit_only': False
-                    }, {
+                         'auction_mode': False,
+                         'base_currency': 'ALCX',
+                         'base_increment': Decimal('0.0001'),
+                         'cancel_only': False,
+                         'display_name': 'ALCX/USDT',
+                         'fx_stablecoin': False,
+                         'id': 'ALCX-USDT',
+                         'limit_only': False,
+                         'margin_enabled': False,
+                         'max_slippage_percentage': Decimal('0.03000000'),
+                         'min_market_funds': Decimal('1'),
+                         'post_only': False,
+                         'quote_currency': 'USDT',
+                         'quote_increment': Decimal('0.01'),
+                         'status': 'online',
+                         'status_message': '',
+                         'trading_disabled': False
+                    },
+                    {
                     ...
                     }
                 ]
@@ -101,12 +104,53 @@ class PublicClient(object):
 
         """
         field_conversions = {
-            "base_min_size": Decimal,
-            "base_max_size": Decimal,
+            "base_increment": Decimal,
+            "min_market_funds": Decimal,
             "quote_increment": Decimal,
+            "max_slippage_percentage": Decimal,
         }
         r = self._send_message("get", "/products", rate_limiter=self.p_rate_limiter)
         return self._convert_list_of_dicts(r, field_conversions)
+
+    def get_product(self, product_id: str) -> Dict[str, Any]:
+        """Get information on a single product.
+
+        Returns:
+            Information about the product. Example::
+                {
+                    'auction_mode': False,
+                     'base_currency': 'ETH',
+                     'base_increment': Decimal('1E-8'),
+                     'cancel_only': False,
+                     'display_name': 'ETH/USD',
+                     'fx_stablecoin': False,
+                     'id': 'ETH-USD',
+                     'limit_only': False,
+                     'margin_enabled': False,
+                     'max_slippage_percentage': Decimal('0.02000000'),
+                     'min_market_funds': Decimal('1'),
+                     'post_only': False,
+                     'quote_currency': 'USD',
+                     'quote_increment': Decimal('0.01'),
+                     'status': 'online',
+                     'status_message': '',
+                     'trading_disabled': False
+                }
+
+        Raises:
+            See `get_products()`.
+
+        """
+        field_conversions = {
+            "base_increment": Decimal,
+            "min_market_funds": Decimal,
+            "quote_increment": Decimal,
+            "max_slippage_percentage": Decimal,
+        }
+        r = self._send_message(
+            "get", f"/products/{product_id}", rate_limiter=self.p_rate_limiter
+        )
+        return self._convert_dict(r, field_conversions)
 
     def get_product_order_book(self, product_id: str, level: int = 1) -> Dict:
         """Get a list of open orders for a product.
@@ -401,6 +445,21 @@ class PublicClient(object):
         )
         return self._convert_list_of_dicts(currencies, field_conversions)
 
+    def get_signed_prices(self) -> Dict[str, Any]:
+        """Get cryptographically signed prices.
+
+         Prices reported are ready to be posted on-chain using
+         Compound's Open Oracle smart contract.
+
+         Returns:
+             Signed price details.
+
+        Raises:
+            See `get_products()`.
+
+        """
+        return self._send_message("get", "/oracle", rate_limiter=self.p_rate_limiter)
+
     def get_time(self) -> Dict[str, Any]:
         """Get the API server time.
 
@@ -532,11 +591,26 @@ class PublicClient(object):
                 params["after"] = r.headers["cb-after"]
 
     @staticmethod
-    def _parse_datetime(dt):
-        try:
-            return datetime.strptime(dt, "%Y-%m-%dT%H:%M:%S.%fZ")
-        except ValueError:
-            return datetime.strptime(dt, "%Y-%m-%dT%H:%M:%SZ")
+    def _parse_datetime(dt: Optional[str]) -> Optional[datetime]:
+        if dt is None:
+            return None
+        datetime_formats = [
+            "%Y-%m-%dT%H:%M:%S.%fZ",
+            "%Y-%m-%dT%H:%M:%SZ",
+            "%Y-%m-%d %H:%M:%S.%f+00",
+        ]
+        for fmt in datetime_formats:
+            try:
+                return datetime.strptime(dt, fmt)
+            except ValueError:
+                pass
+        raise ValueError(f"Couldn't parse datetime {dt} as one of the known formats")
+
+    @staticmethod
+    def _parse_optional_int(val: Optional[str]) -> Optional[int]:
+        if val is None:
+            return None
+        return int(val)
 
     @staticmethod
     def _convert_dict(r, field_conversions):
