@@ -15,8 +15,14 @@ dev
 
 - Add `get_account_transfers` method.
 - Add `get_all_transfers` method.
+- Add `get_transfer` method.
 - Add `get_address_book` method.
 - Add `generate_crypto_address` method.
+- Add `get_crypto_withdrawal_fee_estimate` method.
+- Add `get_fees` method.
+- Update `get_products` to reflect that `min_market_funds` now represents minimum order size. Added more type-conversions to numerical fields.
+- Add `get_product` method.
+- Add `get_signed_prices` method.
 
 0.3.2 (2022-07-28)
 ++++++++++++++++++

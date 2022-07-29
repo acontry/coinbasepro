@@ -12,7 +12,7 @@ CoinbasePro: A Python API
 
 Features
 --------
-- Full support of Coinbase Pro REST API
+- Full support of Coinbase Pro/Coinbase Exchange REST API
 - Rate-limiting - no more 429 error responses!
 - Pythonic abstractions for a clean interface
     - Return values are returned as Python data types instead of all string values:
