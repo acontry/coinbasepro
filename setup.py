@@ -20,7 +20,7 @@ setuptools.setup(
     author_email="acontry@gmail.com",
     url="https://github.com/acontry/coinbasepro",
     packages=setuptools.find_packages(),
-    python_requires=">=3.4.x",
+    python_requires=">=3.4",
     install_requires=requires,
     extras_require={
         "dev": [
