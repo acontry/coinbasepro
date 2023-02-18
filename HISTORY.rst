@@ -8,6 +8,14 @@ dev
 
 - [change here]
 
+0.4.1 (2023-02-18)
+++++++++++++++++++
+
+**Bugfixes**
+
+- Fix `python_requires` in setup.py so this package can be installed by poetry.
+- `get_signed_prices` should be an authenticated endpoint.
+
 0.4.0 (2022-07-28)
 ++++++++++++++++++
 
