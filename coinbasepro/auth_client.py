@@ -1033,7 +1033,7 @@ class AuthenticatedClient(PublicClient):
             See `get_products()`.
 
         """
-        return self._send_message("get", "/oracle", rate_limiter=self.p_rate_limiter)
+        return self._send_message("get", "/oracle", rate_limiter=self.a_rate_limiter)
 
     def withdraw(
         self, amount: Union[float, Decimal], currency: str, payment_method_id: str
