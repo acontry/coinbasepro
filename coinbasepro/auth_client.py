@@ -1020,6 +1020,21 @@ class AuthenticatedClient(PublicClient):
         )
         return self._convert_dict(r, field_conversions)
 
+    def get_signed_prices(self) -> Dict[str, Any]:
+        """Get cryptographically signed prices.
+
+         Prices reported are ready to be posted on-chain using
+         Compound's Open Oracle smart contract.
+
+         Returns:
+             Signed price details.
+
+        Raises:
+            See `get_products()`.
+
+        """
+        return self._send_message("get", "/oracle", rate_limiter=self.p_rate_limiter)
+
     def withdraw(
         self, amount: Union[float, Decimal], currency: str, payment_method_id: str
     ) -> Dict[str, Any]:

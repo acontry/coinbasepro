@@ -445,21 +445,6 @@ class PublicClient(object):
         )
         return self._convert_list_of_dicts(currencies, field_conversions)
 
-    def get_signed_prices(self) -> Dict[str, Any]:
-        """Get cryptographically signed prices.
-
-         Prices reported are ready to be posted on-chain using
-         Compound's Open Oracle smart contract.
-
-         Returns:
-             Signed price details.
-
-        Raises:
-            See `get_products()`.
-
-        """
-        return self._send_message("get", "/oracle", rate_limiter=self.p_rate_limiter)
-
     def get_time(self) -> Dict[str, Any]:
         """Get the API server time.
 
