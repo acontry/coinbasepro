@@ -1,4 +1,4 @@
-CoinbasePro: A Python API
+[Deprecated] CoinbasePro: A Python API
 =========================
 
 .. image:: https://img.shields.io/pypi/v/coinbasepro.svg
