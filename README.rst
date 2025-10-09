@@ -1,5 +1,5 @@
 [Deprecated] CoinbasePro: A Python API
-=========================
+======================================
 
 **This project has been deprecated, as the Coinbase Pro API is now deprecated. Coinbase has replaced it with Coinbase Advanced Trading API.**
 
