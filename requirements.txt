@@ -34,7 +34,7 @@ pygments==2.11.2
     # via coinbasepro (setup.py)
 pyyaml==6.0
     # via pre-commit
-requests==2.27.1
+requests==2.31.0
     # via coinbasepro (setup.py)
 six==1.16.0
     # via virtualenv
